@@ -2,67 +2,43 @@
 import 'vue-sonner/style.css'
 import { Toaster } from '@/components/ui/sonner'
 import { h } from 'vue'
-
-import { toTypedSchema } from '@vee-validate/zod'
-import { useForm, Field as VeeField } from 'vee-validate'
 import { toast } from 'vue-sonner'
 import { z } from 'zod'
-
 import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupText,
-  InputGroupTextarea,
-} from '@/components/ui/input-group'
+import { Field } from '@/components/ui/field'
+import { AutoForm } from '@/components/ui/auto-form'
 
-const formSchema = toTypedSchema(
-  z.object({
-    title: z
-      .string()
-      .min(5, 'Bug title must be at least 5 characters.')
-      .max(32, 'Bug title must be at most 32 characters.'),
-    description: z
-      .string()
-      .min(20, 'Description must be at least 20 characters.')
-      .max(100, 'Description must be at most 100 characters.'),
-  }),
-)
-
-const { handleSubmit, resetForm } = useForm({
-  validationSchema: formSchema,
-  initialValues: {
-    title: '',
-    description: '',
-  },
-})
-
-const onSubmit = handleSubmit((data) => {
-  toast('You submitted the following values:', {
-    description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(data, null, 2))),
-    position: 'bottom-right',
-    class: 'flex flex-col gap-2',
-    style: {
-      '--border-radius': 'calc(var(--radius)  + 4px)',
+const formSchema = {
+  fields: {
+    title: {
+      label: 'Bug Title',
+      name: 'title',
+      as: 'input' as const,
+      rules: z
+        .string()
+        .min(5, 'Bug title must be at least 5 characters.')
+        .max(32, 'Bug title must be at most 32 characters.')
+        .describe('A brief title describing the bug'),
     },
-  })
-})
+    description: {
+      label: 'Description',
+      name: 'description',
+      as: 'textarea' as const,
+      rules: z
+        .string()
+        .min(20, 'Description must be at least 20 characters.')
+        .max(100, 'Description must be at most 100 characters.')
+        .describe('Include steps to reproduce, expected behavior, and what actually happened.'),
+    },
+  },
+}
 </script>
 
 <template>
@@ -75,64 +51,27 @@ const onSubmit = handleSubmit((data) => {
       </CardDescription>
     </CardHeader>
     <CardContent>
-      <form id="form-vee-demo" @submit="onSubmit">
-        <FieldGroup>
-          <VeeField v-slot="{ field, errors }" name="title">
-            <Field :data-invalid="!!errors.length">
-              <FieldLabel for="form-vee-demo-title">
-                Bug Title
-              </FieldLabel>
-              <Input
-                id="form-vee-demo-title"
-                v-bind="field"
-                placeholder="Login button not working on mobile"
-                autocomplete="off"
-                :aria-invalid="!!errors.length"
-              />
-              <FieldError v-if="errors.length" :errors="errors" />
-            </Field>
-          </VeeField>
-
-          <VeeField v-slot="{ field, errors }" name="description">
-            <Field :data-invalid="!!errors.length">
-              <FieldLabel for="form-vee-demo-description">
-                Description
-              </FieldLabel>
-              <InputGroup>
-                <InputGroupTextarea
-                  id="form-vee-demo-description"
-                  v-bind="field"
-                  placeholder="I'm having an issue with the login button on mobile."
-                  :rows="6"
-                  class="min-h-24 resize-none"
-                  :aria-invalid="!!errors.length"
-                />
-                <InputGroupAddon align="block-end">
-                  <InputGroupText class="tabular-nums">
-                    {{ field.value?.length || 0 }}/100 characters
-                  </InputGroupText>
-                </InputGroupAddon>
-              </InputGroup>
-              <FieldDescription>
-                Include steps to reproduce, expected behavior, and what actually
-                happened.
-              </FieldDescription>
-              <FieldError v-if="errors.length" :errors="errors" />
-            </Field>
-          </VeeField>
-        </FieldGroup>
-      </form>
+      <AutoForm
+        :schema="formSchema"
+        :on-submit="(submittedValue) => {
+          toast('You submitted the following values:', {
+            description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(submittedValue, null, 2))),
+          })
+        }"
+        :initial-values="{ title: 'Sample Bug Title', description: 'This is a sample description for testing the auto form.' }"
+      >
+        <template #actions="{ resetForm }">
+          <Field orientation="horizontal">
+            <Button type="button" variant="outline" @click="resetForm">
+              Reset
+            </Button>
+            <Button type="submit">
+              Submit
+            </Button>
+          </Field>
+        </template>
+      </AutoForm>
     </CardContent>
-    <CardFooter>
-      <Field orientation="horizontal">
-        <Button type="button" variant="outline" @click="resetForm">
-          Reset
-        </Button>
-        <Button type="submit" form="form-vee-demo">
-          Submit
-        </Button>
-      </Field>
-    </CardFooter>
   </Card>
 
   <Toaster />
