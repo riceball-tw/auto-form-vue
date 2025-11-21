@@ -48,6 +48,18 @@ const formSchema = {
         { label: 'High', value: 'high' },
       ],
     },
+    tags: {
+      label: 'Tags',
+      id: 'tags',
+      as: 'checkbox' as const,
+      rules: z.array(z.string()).describe('Select relevant tags for the bug.'),
+      options: [
+        { label: 'UI', value: 'ui' },
+        { label: 'Backend', value: 'backend' },
+        { label: 'Performance', value: 'performance' },
+        { label: 'Security', value: 'security' },
+      ],
+    },
   },
 }
 </script>
@@ -69,7 +81,7 @@ const formSchema = {
             description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(submittedValue, null, 2))),
           })
         }"
-        :initial-values="{ title: 'Sample Bug Title', description: 'This is a sample description for testing the auto form.', priority: 'medium' }"
+        :initial-values="{ title: 'Sample Bug Title', description: 'This is a sample description for testing the auto form.', priority: 'medium', tags: [] }"
       >
         <template #actions="{ resetForm }">
           <Field orientation="horizontal">
