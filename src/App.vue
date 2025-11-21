@@ -19,7 +19,7 @@ const formSchema = {
   fields: {
     title: {
       label: 'Bug Title',
-      name: 'title',
+      id: 'title',
       as: 'input' as const,
       rules: z
         .string()
@@ -29,7 +29,7 @@ const formSchema = {
     },
     description: {
       label: 'Description',
-      name: 'description',
+      id: 'description',
       as: 'textarea' as const,
       rules: z
         .string()

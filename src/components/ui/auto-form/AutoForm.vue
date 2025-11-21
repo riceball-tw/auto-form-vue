@@ -47,7 +47,7 @@ const onFormSubmit = handleSubmit((data) => {
     <FieldGroup>
       <AutoField
         v-for="field in fields"
-        :key="field.name"
+        :key="field.id"
         :config="field"
       />
     </FieldGroup>

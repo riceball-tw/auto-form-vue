@@ -18,15 +18,15 @@ const description = getFieldDescription(props.config.rules)
 </script>
 
 <template>
-  <VeeField v-slot="{ field, errors }" :name="config.name">
+  <VeeField v-slot="{ field, errors }" :name="config.id">
     <Field :data-invalid="!!errors.length">
-      <FieldLabel :for="`auto-field-${config.name}`">
+      <FieldLabel :for="`auto-field-${config.id}`">
         {{ config.label }}
       </FieldLabel>
 
       <Input
         v-if="config.as === 'input'"
-        :id="`auto-field-${config.name}`"
+        :id="`auto-field-${config.id}`"
         :model-value="field.value"
         @update:model-value="field.onChange"
         :aria-invalid="!!errors.length"
@@ -34,7 +34,7 @@ const description = getFieldDescription(props.config.rules)
 
       <InputGroup v-else-if="config.as === 'textarea'">
         <InputGroupTextarea
-          :id="`auto-field-${config.name}`"
+          :id="`auto-field-${config.id}`"
           :model-value="field.value"
           @update:model-value="field.onChange"
           :rows="4"
