@@ -1,11 +1,25 @@
 import type { z } from 'zod'
 
-export interface FieldConfig {
-  label: string
-  name: string
-  as: 'input' | 'textarea'
-  rules: z.ZodTypeAny
-}
+export type FieldConfig =
+  | {
+      label: string
+      id: string
+      as: 'input'
+      rules: z.ZodTypeAny
+    }
+  | {
+      label: string
+      id: string
+      as: 'textarea'
+      rules: z.ZodTypeAny
+    }
+  | {
+      label: string
+      id: string
+      as: 'select'
+      rules: z.ZodTypeAny
+      options: { label: string; value: string }[]
+    }
 
 // Utility type to infer form data from schema
 export type InferFormData<T extends { fields: Record<string, FieldConfig> }> = {

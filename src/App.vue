@@ -37,6 +37,17 @@ const formSchema = {
         .max(100, 'Description must be at most 100 characters.')
         .describe('Include steps to reproduce, expected behavior, and what actually happened.'),
     },
+    priority: {
+      label: 'Priority',
+      id: 'priority',
+      as: 'select' as const,
+      rules: z.string().describe('Select the priority level of the bug.'),
+      options: [
+        { label: 'Low', value: 'low' },
+        { label: 'Medium', value: 'medium' },
+        { label: 'High', value: 'high' },
+      ],
+    },
   },
 }
 </script>
@@ -58,7 +69,7 @@ const formSchema = {
             description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(submittedValue, null, 2))),
           })
         }"
-        :initial-values="{ title: 'Sample Bug Title', description: 'This is a sample description for testing the auto form.' }"
+        :initial-values="{ title: 'Sample Bug Title', description: 'This is a sample description for testing the auto form.', priority: 'medium' }"
       >
         <template #actions="{ resetForm }">
           <Field orientation="horizontal">
