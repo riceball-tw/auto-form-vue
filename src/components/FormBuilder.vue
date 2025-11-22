@@ -94,6 +94,7 @@ const removeStep = (index: number) => {
 }
 
 const addField = (stepIndex: number, type: FieldType) => {
+  if (!steps.value[stepIndex]) return
   const newField: BuilderField = {
     id: generateId(),
     label: `${faker.word.adjective()} ${faker.word.noun()}`,
@@ -116,7 +117,7 @@ const removeField = (stepIndex: number, fieldIndex: number) => {
   if (selectedFieldId.value === field.id) {
     selectedFieldId.value = null
   }
-  steps.value[stepIndex].fields.splice(fieldIndex, 1)
+  step.fields.splice(fieldIndex, 1)
 }
 
 const addOption = (field: BuilderField) => {
