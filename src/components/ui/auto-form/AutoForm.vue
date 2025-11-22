@@ -41,7 +41,7 @@ const zodSchema = computed(() => {
 const typedSchema = computed(() => toTypedSchema(zodSchema.value))
 
 const { handleSubmit, setValues, errors, validate } = useForm({
-  validationSchema: typedSchema.value,
+  validationSchema: typedSchema,
   initialValues: props.initialValues || {},
 })
 
