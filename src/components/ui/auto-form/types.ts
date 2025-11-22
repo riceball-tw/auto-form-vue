@@ -6,12 +6,14 @@ export type FieldConfig =
       id: string
       as: 'input'
       rules: z.ZodTypeAny
+      placeholder?: string
     }
   | {
       label: string
       id: string
       as: 'textarea'
       rules: z.ZodTypeAny
+      placeholder?: string
     }
   | {
       label: string

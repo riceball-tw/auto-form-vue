@@ -26,6 +26,7 @@ const formSchema = {
         .min(5, 'Bug title must be at least 5 characters.')
         .max(32, 'Bug title must be at most 32 characters.')
         .describe('A brief title describing the bug'),
+      placeholder: 'Enter a concise bug title',
     },
     description: {
       label: 'Description',
@@ -36,6 +37,7 @@ const formSchema = {
         .min(20, 'Description must be at least 20 characters.')
         .max(100, 'Description must be at most 100 characters.')
         .describe('Include steps to reproduce, expected behavior, and what actually happened.'),
+      placeholder: 'Describe the bug in detail, including steps to reproduce...',
     },
     priority: {
       label: 'Priority',

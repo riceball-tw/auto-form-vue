@@ -32,6 +32,7 @@ const description = getFieldDescription(props.config.rules)
         :model-value="field.value"
         @update:model-value="field.onChange"
         :aria-invalid="!!errors.length"
+        :placeholder="config.placeholder"
       />
 
       <InputGroup v-else-if="config.as === 'textarea'">
@@ -42,6 +43,7 @@ const description = getFieldDescription(props.config.rules)
           :rows="4"
           class="min-h-24 resize-none"
           :aria-invalid="!!errors.length"
+          :placeholder="config.placeholder"
         />
       </InputGroup>
 
