@@ -3,14 +3,14 @@ import { ref, computed, h } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { Plus, Trash2, GripVertical, Settings, Copy } from 'lucide-vue-next'
+import { Plus, Trash2, GripVertical, Copy } from 'lucide-vue-next'
 import { AutoForm } from '@/components/ui/auto-form'
 import { toast } from 'vue-sonner'
 import * as z from 'zod'
@@ -64,7 +64,7 @@ const steps = ref<BuilderStep[]>([
 ])
 
 const selectedFieldId = ref<string | null>(null)
-const activeTab = ref('builder') // 'builder' | 'preview' | 'code'
+const activeTab = ref('preview') // 'preview' | 'code'
 
 // Helper to generate unique IDs
 const generateId = () => Math.random().toString(36).substring(2, 9)
@@ -363,11 +363,14 @@ const previewSchema = computed(() => {
       <CardContent class="flex-1 overflow-hidden flex flex-col gap-4">
         <ScrollArea class="flex-1 pr-4">
           <div v-for="(step, sIndex) in steps" :key:="step.id" class="mb-6">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="font-semibold text-sm">{{ step.title }}</h3>
-              <Button variant="ghost" size="icon" @click="removeStep(sIndex)" :disabled="steps.length === 1">
-                <Trash2 class="w-4 h-4 text-destructive" />
-              </Button>
+            <div class="flex flex-col gap-2 mb-2">
+              <div class="flex items-center justify-between">
+                <Input v-model="step.title" class="h-8 font-semibold text-sm" placeholder="Step Title" />
+                <Button variant="ghost" size="icon" @click="removeStep(sIndex)" :disabled="steps.length === 1" class="ml-2">
+                  <Trash2 class="w-4 h-4 text-destructive" />
+                </Button>
+              </div>
+              <Input v-model="step.description" class="h-7 text-xs text-muted-foreground" placeholder="Step Description" />
             </div>
             
             <div class="space-y-2 pl-2 border-l-2 border-muted">
@@ -415,50 +418,10 @@ const previewSchema = computed(() => {
       <Tabs v-model="activeTab" class="flex-1 flex flex-col">
         <div class="p-4 border-b flex items-center justify-between">
           <TabsList>
-            <TabsTrigger value="builder">Builder</TabsTrigger>
             <TabsTrigger value="preview">Live Preview</TabsTrigger>
             <TabsTrigger value="code">Code</TabsTrigger>
           </TabsList>
         </div>
-        
-        <TabsContent value="builder" class="flex-1 p-8 bg-muted/20 overflow-auto">
-          <div class="max-w-2xl mx-auto space-y-8">
-            <div v-for="step in steps" :key="step.id" class="bg-card border rounded-lg p-6 shadow-sm">
-              <div class="mb-6">
-                <Input v-model="step.title" class="text-lg font-semibold border-none px-0 h-auto focus-visible:ring-0" placeholder="Step Title" />
-                <Input v-model="step.description" class="text-sm text-muted-foreground border-none px-0 h-auto focus-visible:ring-0" placeholder="Step Description" />
-              </div>
-              
-              <div class="space-y-4">
-                <div v-for="field in step.fields" :key="field.id" class="p-4 border rounded-md bg-background relative group">
-                  <div class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                     <Button variant="ghost" size="icon" @click="selectedFieldId = field.id"><Settings class="w-4 h-4" /></Button>
-                  </div>
-                  <Label>{{ field.label }}</Label>
-                  <div class="mt-2 pointer-events-none opacity-60">
-                    <Input v-if="field.type === 'input'" :placeholder="field.placeholder" />
-                    <Textarea v-else-if="field.type === 'textarea'" :placeholder="field.placeholder" />
-                    <Select v-else-if="field.type === 'select'">
-                      <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
-                    </Select>
-                    <div v-else-if="field.type === 'switch'" class="flex items-center space-x-2">
-                      <Switch />
-                    </div>
-                    <div v-else-if="field.type === 'checkbox'" class="space-y-2">
-                      <div v-for="opt in field.options || []" :key="opt.value" class="flex items-center space-x-2">
-                        <div class="h-4 w-4 border rounded" />
-                        <span>{{ opt.label }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div v-if="step.fields.length === 0" class="text-center py-8 text-muted-foreground border-dashed border-2 rounded-lg">
-                  No fields in this step
-                </div>
-              </div>
-            </div>
-          </div>
-        </TabsContent>
         
         <TabsContent value="preview" class="flex-1 p-8 overflow-auto">
           <div class="max-w-2xl mx-auto">
