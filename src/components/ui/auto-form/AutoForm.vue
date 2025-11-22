@@ -125,7 +125,7 @@ const onFormSubmit = handleSubmit((data) => {
 
 <template>
   <Stepper v-slot="{ isPrevDisabled, nextStep, prevStep, modelValue }" v-model="stepIndex" class="block w-full">
-    <div class="flex w-full flex-start gap-2">
+    <div v-if="steps.length > 1" class="flex w-full flex-start gap-2">
       <StepperItem
         v-for="(step, index) in steps"
         :key="index"
