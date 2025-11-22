@@ -1,4 +1,19 @@
-import type { z } from 'zod'
+import * as z from 'zod'
+
+export type DependencyType = 'HIDES' | 'SETS_OPTIONS'
+
+export type Dependency =
+  | {
+      sourceField: string
+      type: 'HIDES'
+      when: (sourceValue: any) => boolean
+    }
+  | {
+      sourceField: string
+      type: 'SETS_OPTIONS'
+      when: (sourceValue: any, targetValue: any) => boolean
+      options: { label: string; value: string }[]
+    }
 
 export type FieldConfig =
   | {
@@ -7,6 +22,7 @@ export type FieldConfig =
       as: 'input'
       rules: z.ZodTypeAny
       placeholder?: string
+      dependencies?: Dependency[]
     }
   | {
       label: string
@@ -14,6 +30,7 @@ export type FieldConfig =
       as: 'textarea'
       rules: z.ZodTypeAny
       placeholder?: string
+      dependencies?: Dependency[]
     }
   | {
       label: string
@@ -21,6 +38,7 @@ export type FieldConfig =
       as: 'select'
       rules: z.ZodTypeAny
       options: { label: string; value: string }[]
+      dependencies?: Dependency[]
     }
   | {
       label: string
@@ -28,12 +46,14 @@ export type FieldConfig =
       as: 'checkbox'
       rules: z.ZodTypeAny
       options: { label: string; value: string }[]
+      dependencies?: Dependency[]
     }
   | {
       label: string
       id: string
       as: 'switch'
       rules: z.ZodTypeAny
+      dependencies?: Dependency[]
     }
 
 // Utility type to infer form data from schema

@@ -93,7 +93,6 @@ const description = getFieldDescription(props.config.rules)
 
         <div v-else-if="config.as === 'switch'">
           <Switch
-            
             :id="`auto-field-${config.id}`"
             :model-value="field.value"
             @update:model-value="field.onChange"

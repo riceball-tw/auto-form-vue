@@ -15,61 +15,83 @@ import {
 import { Field } from '@/components/ui/field'
 import { AutoForm } from '@/components/ui/auto-form'
 
+// import { DependencyType } from '@/components/ui/auto-form'
+
 const formSchema = {
   fields: {
-    title: {
-      label: 'Bug Title',
-      id: 'title',
+    age: {
+      label: 'Age',
+      id: 'age',
       as: 'input' as const,
-      rules: z
-        .string()
-        .min(5, 'Bug title must be at least 5 characters.')
-        .max(32, 'Bug title must be at most 32 characters.')
-        .describe('A brief title describing the bug'),
-      placeholder: 'Enter a concise bug title',
+      rules: z.string().describe('Your age'),
+      placeholder: 'Enter your age',
     },
-    description: {
-      label: 'Description',
-      id: 'description',
-      as: 'textarea' as const,
-      rules: z
-        .string()
-        .min(20, 'Description must be at least 20 characters.')
-        .max(100, 'Description must be at most 100 characters.')
-        .describe('Include steps to reproduce, expected behavior, and what actually happened.'),
-      placeholder: 'Describe the bug in detail, including steps to reproduce...',
-    },
-    priority: {
-      label: 'Priority',
-      id: 'priority',
-      as: 'select' as const,
-      rules: z.string().describe('Select the priority level of the bug.'),
-      options: [
-        { label: 'Low', value: 'low' },
-        { label: 'Medium', value: 'medium' },
-        { label: 'High', value: 'high' },
-      ],
-    },
-    tags: {
-      label: 'Tags',
-      id: 'tags',
-      as: 'checkbox' as const,
-      rules: z.array(z.string()).describe('Select relevant tags for the bug.'),
-      options: [
-        { label: 'UI', value: 'ui' },
-        { label: 'Backend', value: 'backend' },
-        { label: 'Performance', value: 'performance' },
-        { label: 'Security', value: 'security' },
-      ],
-    },
-    notifyOnUpdate: {
-      label: 'Notify on Update',
-      id: 'notifyOnUpdate',
+    parentsAllowed: {
+      label: 'Parents Allowed',
+      id: 'parentsAllowed',
       as: 'switch' as const,
-      rules: z.boolean().refine(val => val === true, {
-      message: 'It is required to check',
-    }).describe('Receive notifications when the bug status updates.'),
+      rules: z.boolean().optional().describe('Are parents allowed?'),
+      dependencies: [
+        {
+          sourceField: 'age',
+          type: 'HIDES' as const,
+          when: (sourceValue: string) => Number(sourceValue) >= 18,
+        },
+      ],
     },
+    vegetarian: {
+      label: 'Vegetarian',
+      id: 'vegetarian',
+      as: 'switch' as const,
+      rules: z.boolean().describe('Are you vegetarian?'),
+    },
+    mealOptions: {
+      label: 'Meal Options',
+      id: 'mealOptions',
+      as: 'select' as const,
+      rules: z.string().describe('Select your meal'),
+      options: [
+        { label: 'Pasta', value: 'Pasta' },
+        { label: 'Salad', value: 'Salad' },
+        { label: 'Beef Wellington', value: 'Beef Wellington' },
+        { label: 'Chicken', value: 'Chicken' },
+      ],
+      dependencies: [
+        {
+          sourceField: 'vegetarian',
+          type: 'SETS_OPTIONS' as const,
+          when: (sourceValue: boolean, targetValue: string) => sourceValue,
+          options: [
+            { label: 'Pasta', value: 'Pasta' },
+            { label: 'Salad', value: 'Salad' },
+          ],
+        },
+      ],
+    },
+    mealOptionsMulti: {
+      label: 'Meal Options Multi',
+      id: 'mealOptionsMulti',
+      as: 'checkbox' as const,
+      rules: z.array(z.string()).describe('Select your meals'),
+      options: [
+        { label: 'Pasta', value: 'Pasta' },
+        { label: 'Salad', value: 'Salad' },
+        { label: 'Beef Wellington', value: 'Beef Wellington' },
+        { label: 'Chicken', value: 'Chicken' },
+      ],
+      dependencies: [
+        {
+          sourceField: 'vegetarian',
+          type: 'SETS_OPTIONS' as const,
+          when: (sourceValue: boolean, targetValue: string[]) => sourceValue,
+          options: [
+            { label: 'Pasta', value: 'Pasta' },
+            { label: 'Salad', value: 'Salad' },
+          ],
+        },
+      ],
+    },
+
   },
 }
 </script>
@@ -78,9 +100,9 @@ const formSchema = {
 
   <Card class="w-full sm:max-w-md">
     <CardHeader>
-      <CardTitle>Bug Report</CardTitle>
+      <CardTitle>Form with Dependencies</CardTitle>
       <CardDescription>
-        Help us improve by reporting bugs you encounter.
+        Example of field dependencies: age hides parentsAllowed when >=18, vegetarian filters meal options.
       </CardDescription>
     </CardHeader>
     <CardContent>
@@ -91,7 +113,7 @@ const formSchema = {
             description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(submittedValue, null, 2))),
           })
         }"
-        :initial-values="{ title: 'Sample Bug Title', description: 'This is a sample description for testing the auto form.', priority: 'medium', tags: [], notifyOnUpdate: false }"
+        :initial-values="{ age: '16', parentsAllowed: true, vegetarian: false, mealOptions: 'Pasta', mealOptionsMulti: [] }"
       >
         <template #actions="{ resetForm }">
           <Field orientation="horizontal">
