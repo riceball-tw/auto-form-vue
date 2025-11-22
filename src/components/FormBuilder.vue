@@ -97,11 +97,11 @@ const addField = (stepIndex: number, type: FieldType) => {
   if (!steps.value[stepIndex]) return
   const newField: BuilderField = {
     id: generateId(),
-    label: `${faker.word.adjective()} ${faker.word.noun()}`,
+    label: `${faker.animal.type()}`,
     key: `field_${generateId()}`,
     type,
     required: true,
-    options: type === 'select' || type === 'checkbox' ? [{ label: `${faker.word.noun()}`, value: 'opt1' }] : undefined,
+    options: type === 'select' || type === 'checkbox' ? [{ label: `${faker.animal.type()}`, value: 'opt1' }] : undefined,
     zodRules: '',
     dependencies: []
   }
@@ -365,12 +365,12 @@ const previewSchema = computed(() => {
           <div v-for="(step, sIndex) in steps" :key:="step.id" class="mb-6">
             <div class="flex flex-col gap-2 mb-2">
               <div class="flex items-center justify-between">
-                <Input v-model="step.title" class="h-8 font-semibold text-sm" placeholder="Step Title" />
+                <Input v-model="step.title" class="font-semibold text-sm" placeholder="Step Title" />
                 <Button variant="ghost" size="icon" @click="removeStep(sIndex)" :disabled="steps.length === 1" class="ml-2">
                   <Trash2 class="w-4 h-4 text-destructive" />
                 </Button>
               </div>
-              <Input v-model="step.description" class="h-7 text-xs text-muted-foreground" placeholder="Step Description" />
+              <Input v-model="step.description" class="text-xs text-muted-foreground" placeholder="Step Description" />
             </div>
             
             <div class="space-y-2 pl-2 border-l-2 border-muted">
@@ -414,47 +414,48 @@ const previewSchema = computed(() => {
     </Card>
 
     <!-- Center Panel: Preview / Canvas -->
-    <Card class="flex-1 flex flex-col h-fit">
-      <Tabs v-model="activeTab" class="flex-1 flex flex-col">
-        <div class="p-4 border-b flex items-center justify-between">
+    <Tabs class="flex-1 flex flex-col h-fit" v-model="activeTab">
+        <div class="flex items-center justify-between">
           <TabsList>
             <TabsTrigger value="preview">Live Preview</TabsTrigger>
             <TabsTrigger value="code">Code</TabsTrigger>
           </TabsList>
         </div>
-        
-        <TabsContent value="preview" class="flex-1 p-8 overflow-auto">
-          <div class="max-w-2xl mx-auto">
-            <AutoForm
-              :schema="previewSchema"
-              :on-submit="(data) => {
-                toast('Form submitted:', {
-                  description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(data, null, 2))),
-                })
-              }"
-            />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="code" class="flex-1 p-4 overflow-hidden min-h-[300px] flex flex-col">
-          <div class="flex justify-end mb-2">
-            <Button variant="outline" size="sm" @click="copyCode">
-              <Copy class="w-4 h-4 mr-2" />
-              Copy Code
-            </Button>
-          </div>
-          <ScrollArea class="flex-1">
-            <pre class="text-sm font-mono">{{ generatedCode }}</pre>
-          </ScrollArea>
-        </TabsContent>
-      </Tabs>
-    </Card>
+      <Card class="p-0">
+        <div class="flex-1 flex flex-col w-full">
+          <TabsContent value="preview" class="flex-1 p-8 overflow-auto">
+            <div class="max-w-2xl mx-auto">
+              <AutoForm
+                :schema="previewSchema"
+                :on-submit="(data) => {
+                  toast('Form submitted:', {
+                    description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(data, null, 2))),
+                  })
+                }"
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="code" class="flex-1 p-2 overflow-hidden flex flex-col">
+            <ScrollArea class="flex-1">
+              <pre class="text-sm font-mono p-2">{{ generatedCode }}</pre>
+            </ScrollArea>
+            <div class="flex justify-end">
+              <Button variant="outline" class="p-8 w-full" @click="copyCode">
+                <Copy class="w-4 h-4 mr-2" />
+                Copy Code
+              </Button>
+            </div>
+          </TabsContent>
+        </div>
+      </Card>
+    </Tabs>
 
     <!-- Right Panel: Properties -->
     <Card class="w-full lg:w-1/4 flex flex-col h-fit">
       <CardHeader>
         <CardTitle>Properties</CardTitle>
-        <CardDescription v-if="selectedField">Edit {{ selectedField.label }}</CardDescription>
+        <CardDescription v-if="selectedField">Editing: {{ selectedField.label }}</CardDescription>
         <CardDescription v-else>Select a field to edit</CardDescription>
       </CardHeader>
       <CardContent class="flex-1 overflow-auto">
@@ -567,8 +568,8 @@ const previewSchema = computed(() => {
                     </div>
                     <div class="space-y-2">
                       <div v-for="(opt, optIdx) in dep.options || []" :key="optIdx" class="flex gap-2">
-                        <Input v-model="opt.label" placeholder="Label" class="h-7 text-xs flex-1" />
-                        <Input v-model="opt.value" placeholder="Value" class="h-7 text-xs flex-1" />
+                        <Input v-model="opt.label" placeholder="Label" class="text-xs flex-1" />
+                        <Input v-model="opt.value" placeholder="Value" class="text-xs flex-1" />
                         <Button size="icon" variant="ghost" class="h-7 w-7" @click="removeDependencyOption(dep, optIdx)">
                           <Trash2 class="w-3 h-3" />
                         </Button>

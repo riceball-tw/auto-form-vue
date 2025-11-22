@@ -8,7 +8,7 @@ import { Navbar } from '@/components/ui/navbar'
 <template>
   <div class="w-full min-h-screen bg-background">
     <Navbar />
-    <div class="container mx-auto py-8">
+    <div class="py-8">
       <FormBuilder />
     </div>
   </div>
