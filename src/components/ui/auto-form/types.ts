@@ -29,6 +29,12 @@ export type FieldConfig =
       rules: z.ZodTypeAny
       options: { label: string; value: string }[]
     }
+  | {
+      label: string
+      id: string
+      as: 'switch'
+      rules: z.ZodTypeAny
+    }
 
 // Utility type to infer form data from schema
 export type InferFormData<T extends { fields: Record<string, FieldConfig> }> = {

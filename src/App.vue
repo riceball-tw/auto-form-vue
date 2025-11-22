@@ -62,6 +62,14 @@ const formSchema = {
         { label: 'Security', value: 'security' },
       ],
     },
+    notifyOnUpdate: {
+      label: 'Notify on Update',
+      id: 'notifyOnUpdate',
+      as: 'switch' as const,
+      rules: z.boolean().refine(val => val === true, {
+      message: 'It is required to check',
+    }).describe('Receive notifications when the bug status updates.'),
+    },
   },
 }
 </script>
@@ -83,7 +91,7 @@ const formSchema = {
             description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(submittedValue, null, 2))),
           })
         }"
-        :initial-values="{ title: 'Sample Bug Title', description: 'This is a sample description for testing the auto form.', priority: 'medium', tags: [] }"
+        :initial-values="{ title: 'Sample Bug Title', description: 'This is a sample description for testing the auto form.', priority: 'medium', tags: [], notifyOnUpdate: false }"
       >
         <template #actions="{ resetForm }">
           <Field orientation="horizontal">

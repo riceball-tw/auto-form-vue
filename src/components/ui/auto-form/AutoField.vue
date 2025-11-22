@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { InputGroup, InputGroupTextarea } from '@/components/ui/input-group'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Switch } from '@/components/ui/switch'
 import type { FieldConfig } from './types'
 
 const props = defineProps<{
@@ -88,9 +89,20 @@ const description = getFieldDescription(props.config.rules)
              {{ option.label }}
            </FieldLabel>
          </Field>
-       </div>
+        </div>
 
-      <FieldDescription v-if="description">
+        <div v-else-if="config.as === 'switch'">
+          <Switch
+            
+            :id="`auto-field-${config.id}`"
+            :model-value="field.value"
+            @update:model-value="field.onChange"
+            :aria-invalid="!!errors.length"
+          />
+        </div>
+
+       
+       <FieldDescription v-if="description">
         {{ description }}
       </FieldDescription>
 
