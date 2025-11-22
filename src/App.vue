@@ -4,33 +4,90 @@ import { Toaster } from '@/components/ui/sonner'
 import { h } from 'vue'
 import { toast } from 'vue-sonner'
 import { z } from 'zod'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Field } from '@/components/ui/field'
 import { AutoForm } from '@/components/ui/auto-form'
 
-// import { DependencyType } from '@/components/ui/auto-form'
+const step1 = {
+  title: 'Basic Fields',
+  description: 'Demonstrate input, textarea, and switch fields',
+  fields: {
+    name: {
+      label: 'Full Name',
+      id: 'name',
+      as: 'input' as const,
+      rules: z.string().min(1, 'Name is required').describe('Your full name'),
+      placeholder: 'Enter your full name',
+    },
+    email: {
+      label: 'Email',
+      id: 'email',
+      as: 'input' as const,
+      rules: z.string().email('Invalid email').describe('Your email address'),
+      placeholder: 'Enter your email',
+    },
+    bio: {
+      label: 'Bio',
+      id: 'bio',
+      as: 'textarea' as const,
+      rules: z.string().max(500, 'Bio too long').describe('Tell us about yourself'),
+      placeholder: 'Write a short bio...',
+    },
+    newsletter: {
+      label: 'Subscribe to Newsletter',
+      id: 'newsletter',
+      as: 'switch' as const,
+      rules: z.boolean().describe('Subscribe to our newsletter'),
+    },
+  }
+}
 
-const formSchema = {
+const step2 = {
+  title: 'Selection Fields',
+  description: 'Demonstrate select and checkbox fields',
+  fields: {
+    country: {
+      label: 'Country',
+      id: 'country',
+      as: 'select' as const,
+      rules: z.string().describe('Select your country'),
+      options: [
+        { label: 'United States', value: 'us' },
+        { label: 'Canada', value: 'ca' },
+        { label: 'United Kingdom', value: 'uk' },
+        { label: 'Australia', value: 'au' },
+      ],
+    },
+    interests: {
+      label: 'Interests',
+      id: 'interests',
+      as: 'checkbox' as const,
+      rules: z.array(z.string()).min(1, 'Select at least one interest').describe('Select your interests'),
+      options: [
+        { label: 'Technology', value: 'tech' },
+        { label: 'Sports', value: 'sports' },
+        { label: 'Music', value: 'music' },
+        { label: 'Travel', value: 'travel' },
+        { label: 'Food', value: 'food' },
+      ],
+    },
+  }
+}
+
+const step3 = {
+  title: 'Dependencies Demo',
+  description: 'Show HIDES and SETS_OPTIONS dependencies',
   fields: {
     age: {
       label: 'Age',
       id: 'age',
       as: 'input' as const,
-      rules: z.string().describe('Your age'),
+      rules: z.string().regex(/^\d+$/, 'Must be a number').describe('Your age'),
       placeholder: 'Enter your age',
     },
-    parentsAllowed: {
-      label: 'Parents Allowed',
-      id: 'parentsAllowed',
+    parentConsent: {
+      label: 'Parent Consent',
+      id: 'parentConsent',
       as: 'switch' as const,
-      rules: z.boolean().optional().describe('Are parents allowed?'),
+      rules: z.boolean().describe('Parent consent required'),
       dependencies: [
         {
           sourceField: 'age',
@@ -39,95 +96,96 @@ const formSchema = {
         },
       ],
     },
-    vegetarian: {
-      label: 'Vegetarian',
-      id: 'vegetarian',
-      as: 'switch' as const,
-      rules: z.boolean().describe('Are you vegetarian?'),
+    dietaryRestriction: {
+      label: 'Dietary Restriction',
+      id: 'dietaryRestriction',
+      as: 'select' as const,
+      rules: z.string().describe('Select dietary restriction'),
+      options: [
+        { label: 'None', value: 'none' },
+        { label: 'Vegetarian', value: 'vegetarian' },
+        { label: 'Vegan', value: 'vegan' },
+        { label: 'Gluten-Free', value: 'gluten-free' },
+      ],
     },
-    mealOptions: {
-      label: 'Meal Options',
-      id: 'mealOptions',
+    mealChoice: {
+      label: 'Meal Choice',
+      id: 'mealChoice',
       as: 'select' as const,
       rules: z.string().describe('Select your meal'),
       options: [
-        { label: 'Pasta', value: 'Pasta' },
-        { label: 'Salad', value: 'Salad' },
-        { label: 'Beef Wellington', value: 'Beef Wellington' },
-        { label: 'Chicken', value: 'Chicken' },
+        { label: 'Grilled Chicken', value: 'chicken' },
+        { label: 'Beef Steak', value: 'beef' },
+        { label: 'Salmon', value: 'salmon' },
+        { label: 'Pasta', value: 'pasta' },
+        { label: 'Salad', value: 'salad' },
       ],
       dependencies: [
         {
-          sourceField: 'vegetarian',
+          sourceField: 'dietaryRestriction',
           type: 'SETS_OPTIONS' as const,
-          when: (sourceValue: boolean, targetValue: string) => sourceValue,
+          when: (sourceValue: string) => sourceValue === 'vegetarian',
           options: [
-            { label: 'Pasta', value: 'Pasta' },
-            { label: 'Salad', value: 'Salad' },
+            { label: 'Pasta', value: 'pasta' },
+            { label: 'Salad', value: 'salad' },
+            { label: 'Vegetable Stir Fry', value: 'veg-stir-fry' },
+          ],
+        },
+        {
+          sourceField: 'dietaryRestriction',
+          type: 'SETS_OPTIONS' as const,
+          when: (sourceValue: string) => sourceValue === 'vegan',
+          options: [
+            { label: 'Salad', value: 'salad' },
+            { label: 'Vegetable Stir Fry', value: 'veg-stir-fry' },
+            { label: 'Quinoa Bowl', value: 'quinoa' },
           ],
         },
       ],
     },
-    mealOptionsMulti: {
-      label: 'Meal Options Multi',
-      id: 'mealOptionsMulti',
+    additionalMeals: {
+      label: 'Additional Meals',
+      id: 'additionalMeals',
       as: 'checkbox' as const,
-      rules: z.array(z.string()).describe('Select your meals'),
+      rules: z.array(z.string()).describe('Select additional meals'),
       options: [
-        { label: 'Pasta', value: 'Pasta' },
-        { label: 'Salad', value: 'Salad' },
-        { label: 'Beef Wellington', value: 'Beef Wellington' },
-        { label: 'Chicken', value: 'Chicken' },
+        { label: 'Soup', value: 'soup' },
+        { label: 'Dessert', value: 'dessert' },
+        { label: 'Beverage', value: 'beverage' },
       ],
       dependencies: [
         {
-          sourceField: 'vegetarian',
+          sourceField: 'dietaryRestriction',
           type: 'SETS_OPTIONS' as const,
-          when: (sourceValue: boolean, targetValue: string[]) => sourceValue,
+          when: (sourceValue: string) => sourceValue === 'vegan',
           options: [
-            { label: 'Pasta', value: 'Pasta' },
-            { label: 'Salad', value: 'Salad' },
+            { label: 'Fruit Salad', value: 'fruit-salad' },
+            { label: 'Vegan Dessert', value: 'vegan-dessert' },
+            { label: 'Herbal Tea', value: 'herbal-tea' },
           ],
         },
       ],
     },
+  }
+}
 
-  },
+const formSchema = {
+  steps: [step1, step2, step3],
 }
 </script>
 
 <template>
-
-  <Card class="w-full sm:max-w-md">
-    <CardHeader>
-      <CardTitle>Form with Dependencies</CardTitle>
-      <CardDescription>
-        Example of field dependencies: age hides parentsAllowed when >=18, vegetarian filters meal options.
-      </CardDescription>
-    </CardHeader>
-    <CardContent>
-      <AutoForm
-        :schema="formSchema"
-        :on-submit="(submittedValue) => {
-          toast('You submitted the following values:', {
-            description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(submittedValue, null, 2))),
-          })
-        }"
-        :initial-values="{ age: '16', parentsAllowed: true, vegetarian: false, mealOptions: 'Pasta', mealOptionsMulti: [] }"
-      >
-        <template #actions="{ resetForm }">
-          <Field orientation="horizontal">
-            <Button type="button" variant="outline" @click="resetForm">
-              Reset
-            </Button>
-            <Button type="submit">
-              Submit
-            </Button>
-          </Field>
-        </template>
-      </AutoForm>
-    </CardContent>
-  </Card>
+  <div class="w-full max-w-2xl mx-auto">
+    <AutoForm
+      :schema="formSchema"
+      :on-submit="(submittedValue) => {
+        toast('You submitted the following values:', {
+          description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(submittedValue, null, 2))),
+        })
+      }"
+      :initial-values="{ name: 'John Doe', email: 'john@example.com', bio: 'Hello world', newsletter: true, country: 'us', interests: ['tech', 'music'], age: '25', parentConsent: false, dietaryRestriction: 'none', mealChoice: 'chicken', additionalMeals: ['soup'] }"
+    />
+  </div>
 
   <Toaster />
 </template>

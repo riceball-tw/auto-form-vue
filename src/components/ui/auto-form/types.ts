@@ -57,6 +57,4 @@ export type FieldConfig =
     }
 
 // Utility type to infer form data from schema
-export type InferFormData<T extends { fields: Record<string, FieldConfig> }> = {
-  [K in keyof T['fields']]: z.infer<T['fields'][K]['rules']>
-}
+export type InferFormData = Record<string, any>
