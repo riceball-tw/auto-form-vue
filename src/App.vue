@@ -6,9 +6,18 @@ import { toast } from 'vue-sonner'
 import { z } from 'zod'
 import { AutoForm } from '@/components/ui/auto-form'
 import FormBuilder from '@/components/FormBuilder.vue'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
+import { useTheme } from '@/composables/use-theme'
+import { Moon, Sun } from 'lucide-vue-next'
 
 const activeView = ref('example')
+
+const { theme, setTheme } = useTheme()
+
+const toggleTheme = () => {
+  setTheme(theme.value === 'dark' ? 'light' : 'dark')
+}
 
 const step1 = {
   title: 'Basic Fields',
@@ -183,12 +192,18 @@ const formSchema = {
     <div class="container mx-auto py-8">
       <div class="flex items-center justify-between mb-8">
         <h1 class="text-3xl font-bold">AutoForm Vue</h1>
-        <Tabs v-model="activeView" class="w-[400px]">
-          <TabsList class="grid w-full grid-cols-2">
-            <TabsTrigger value="example">Example</TabsTrigger>
-            <TabsTrigger value="builder">Form Builder</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div class="flex items-center gap-4">
+          <Button variant="outline" size="icon" @click="toggleTheme">
+            <Sun v-if="theme === 'light'" class="h-4 w-4" />
+            <Moon v-else class="h-4 w-4" />
+          </Button>
+          <Tabs v-model="activeView" class="w-[400px]">
+            <TabsList class="grid w-full grid-cols-2">
+              <TabsTrigger value="example">Example</TabsTrigger>
+              <TabsTrigger value="builder">Form Builder</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </div>
 
       <div v-if="activeView === 'example'" class="max-w-2xl mx-auto">
