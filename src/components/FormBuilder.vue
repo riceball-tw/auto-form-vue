@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -25,6 +25,13 @@ interface FieldOption {
   value: string
 }
 
+interface BuilderDependency {
+  sourceField: string
+  type: 'HIDES' | 'SETS_OPTIONS'
+  value: string
+  options?: FieldOption[]
+}
+
 interface BuilderField {
   id: string
   label: string
@@ -36,6 +43,7 @@ interface BuilderField {
   options?: FieldOption[] // For select/checkbox
   // Generic Zod Rule Chain
   zodRules?: string // e.g. ".min(5).email()"
+  dependencies?: BuilderDependency[]
 }
 
 interface BuilderStep {
@@ -93,14 +101,18 @@ const addField = (stepIndex: number, type: FieldType) => {
     type,
     required: true,
     options: type === 'select' || type === 'checkbox' ? [{ label: `${faker.word.noun()}`, value: 'opt1' }] : undefined,
-    zodRules: ''
+    zodRules: '',
+    dependencies: []
   }
   steps.value[stepIndex].fields.push(newField)
   selectedFieldId.value = newField.id
 }
 
 const removeField = (stepIndex: number, fieldIndex: number) => {
-  const field = steps.value[stepIndex].fields[fieldIndex]
+  const step = steps.value[stepIndex]
+  if (!step) return
+  const field = step.fields[fieldIndex]
+  if (!field) return
   if (selectedFieldId.value === field.id) {
     selectedFieldId.value = null
   }
@@ -115,6 +127,32 @@ const addOption = (field: BuilderField) => {
 const removeOption = (field: BuilderField, index: number) => {
   if (field.options) {
     field.options.splice(index, 1)
+  }
+}
+
+const addDependency = (field: BuilderField) => {
+  if (!field.dependencies) field.dependencies = []
+  field.dependencies.push({
+    sourceField: '',
+    type: 'HIDES',
+    value: ''
+  })
+}
+
+const removeDependency = (field: BuilderField, index: number) => {
+  if (field.dependencies) {
+    field.dependencies.splice(index, 1)
+  }
+}
+
+const addDependencyOption = (dep: BuilderDependency) => {
+  if (!dep.options) dep.options = []
+  dep.options.push({ label: 'New Option', value: 'new-opt' })
+}
+
+const removeDependencyOption = (dep: BuilderDependency, index: number) => {
+  if (dep.options) {
+    dep.options.splice(index, 1)
   }
 }
 
@@ -172,6 +210,33 @@ const generatedCode = computed(() => {
         code += `      options: [\n`
         field.options.forEach(opt => {
           code += `        { label: '${opt.label}', value: '${opt.value}' },\n`
+        })
+        code += `      ],\n`
+      }
+
+      if (field.dependencies && field.dependencies.length > 0) {
+        code += `      dependencies: [\n`
+        field.dependencies.forEach(dep => {
+          code += `        {\n`
+          code += `          sourceField: '${dep.sourceField}',\n`
+          code += `          type: '${dep.type}',\n`
+          
+          if (dep.type === 'HIDES') {
+             // HIDES means "Hide if true". 
+             // If we want "Show if X=Y", we need "Hide if X!=Y".
+             // Let's assume the UI says "Hide when source equals value" for simplicity first as per plan.
+             code += `          when: (val) => val === '${dep.value}',\n`
+          } else if (dep.type === 'SETS_OPTIONS') {
+             code += `          when: (sourceVal, targetVal) => sourceVal === '${dep.value}',\n`
+             if (dep.options) {
+               code += `          options: [\n`
+               dep.options.forEach(opt => {
+                 code += `            { label: '${opt.label}', value: '${opt.value}' },\n`
+               })
+               code += `          ],\n`
+             }
+          }
+          code += `        },\n`
         })
         code += `      ],\n`
       }
@@ -258,7 +323,17 @@ const previewSchema = computed(() => {
         as: field.type,
         rules: zodRule,
         placeholder: field.placeholder,
-        options: field.options
+        options: field.options,
+        dependencies: field.dependencies?.map(dep => {
+          return {
+            sourceField: dep.sourceField,
+            type: dep.type,
+            when: (val: any, _targetVal: any) => {
+              return val === dep.value
+            },
+            options: dep.options
+          }
+        })
       }
     })
     
@@ -467,6 +542,79 @@ const previewSchema = computed(() => {
                   <Trash2 class="w-4 h-4" />
                 </Button>
               </div>
+            </div>
+          </div>
+          
+          <Separator class="my-4" />
+          
+          <div class="space-y-4">
+             <div class="flex items-center justify-between">
+              <Label>Dependencies</Label>
+              <Button size="sm" variant="outline" @click="addDependency(selectedField)">Add</Button>
+            </div>
+            
+            <div v-if="selectedField.dependencies && selectedField.dependencies.length > 0" class="space-y-4">
+              <div v-for="(dep, idx) in selectedField.dependencies" :key="idx" class="border p-3 rounded-md space-y-3 relative">
+                 <Button variant="ghost" size="icon" class="absolute right-2 top-2 h-6 w-6" @click="removeDependency(selectedField, idx)">
+                    <Trash2 class="w-3 h-3" />
+                  </Button>
+                  
+                  <div class="space-y-1">
+                    <Label class="text-xs">Type</Label>
+                    <Select v-model="dep.type">
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="HIDES">Hides</SelectItem>
+                        <SelectItem value="SETS_OPTIONS">Sets Options</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div class="space-y-1">
+                    <Label class="text-xs">Source Field</Label>
+                    <Select v-model="dep.sourceField">
+                      <SelectTrigger><SelectValue placeholder="Select field" /></SelectTrigger>
+                      <SelectContent>
+                        <template v-for="step in steps" :key="step.id">
+                           <SelectItem 
+                              v-for="f in step.fields" 
+                              :key="f.key" 
+                              :value="f.key"
+                              :disabled="f.id === selectedField.id"
+                           >
+                              {{ f.label }} ({{ f.key }})
+                           </SelectItem>
+                        </template>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div class="space-y-1">
+                    <Label class="text-xs">When Value Equals</Label>
+                    <Input v-model="dep.value" placeholder="Value to match" />
+                  </div>
+                  
+                  <div v-if="dep.type === 'SETS_OPTIONS'" class="space-y-2 pt-2 border-t">
+                    <div class="flex items-center justify-between">
+                      <Label class="text-xs">Target Options</Label>
+                      <Button size="icon" variant="ghost" class="h-5 w-5" @click="addDependencyOption(dep)">
+                        <Plus class="w-3 h-3" />
+                      </Button>
+                    </div>
+                    <div class="space-y-2">
+                      <div v-for="(opt, optIdx) in dep.options || []" :key="optIdx" class="flex gap-2">
+                        <Input v-model="opt.label" placeholder="Label" class="h-7 text-xs flex-1" />
+                        <Input v-model="opt.value" placeholder="Value" class="h-7 text-xs flex-1" />
+                        <Button size="icon" variant="ghost" class="h-7 w-7" @click="removeDependencyOption(dep, optIdx)">
+                          <Trash2 class="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+            </div>
+            <div v-else class="text-xs text-muted-foreground text-center py-2">
+              No dependencies configured.
             </div>
           </div>
           
