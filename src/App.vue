@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import 'vue-sonner/style.css'
 import { Toaster } from '@/components/ui/sonner'
-import { h } from 'vue'
+import { h, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { z } from 'zod'
 import { AutoForm } from '@/components/ui/auto-form'
+import FormBuilder from '@/components/FormBuilder.vue'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+const activeView = ref('example')
 
 const step1 = {
   title: 'Basic Fields',
@@ -175,17 +179,36 @@ const formSchema = {
 </script>
 
 <template>
-  <div class="w-full max-w-2xl mx-auto">
-    <AutoForm
-      :schema="formSchema"
-      :on-submit="(submittedValue) => {
-        toast('You submitted the following values:', {
-          description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(submittedValue, null, 2))),
-        })
-      }"
-      :initial-values="{ name: 'John Doe', email: 'john@example.com', bio: 'Hello world', newsletter: true, country: 'us', interests: ['tech', 'music'], age: '25', parentConsent: false, dietaryRestriction: 'none', mealChoice: 'chicken', additionalMeals: ['soup'] }"
-    />
+  <div class="w-full min-h-screen bg-background">
+    <div class="container mx-auto py-8">
+      <div class="flex items-center justify-between mb-8">
+        <h1 class="text-3xl font-bold">AutoForm Vue</h1>
+        <Tabs v-model="activeView" class="w-[400px]">
+          <TabsList class="grid w-full grid-cols-2">
+            <TabsTrigger value="example">Example</TabsTrigger>
+            <TabsTrigger value="builder">Form Builder</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <div v-if="activeView === 'example'" class="max-w-2xl mx-auto">
+        <AutoForm
+          :schema="formSchema"
+          :on-submit="(submittedValue) => {
+            toast('You submitted the following values:', {
+              description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(submittedValue, null, 2))),
+            })
+          }"
+          :initial-values="{ name: 'John Doe', email: 'john@example.com', bio: 'Hello world', newsletter: true, country: 'us', interests: ['tech', 'music'], age: '25', parentConsent: false, dietaryRestriction: 'none', mealChoice: 'chicken', additionalMeals: ['soup'] }"
+        />
+      </div>
+
+      <div v-else-if="activeView === 'builder'" class="w-full">
+        <FormBuilder />
+      </div>
+    </div>
   </div>
 
   <Toaster />
 </template>
+
