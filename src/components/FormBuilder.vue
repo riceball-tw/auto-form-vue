@@ -513,7 +513,7 @@ onUnmounted(() => {
             <div class="max-w-2xl mx-auto relative" ref="formContainer">
               <div 
                 v-if="highlightStyle"
-                class="absolute bg-muted/50 border border-muted-foreground/20 rounded-md -z-0 transition-all duration-300 ease-out pointer-events-none"
+                class="absolute bg-muted border border-muted-foreground border-dotted border-2 rounded-md -z-0 transition-all duration-300 ease-out pointer-events-none"
                 :style="highlightStyle"
               ></div>
               <div class="relative z-10">
