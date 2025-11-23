@@ -403,10 +403,10 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col lg:flex-row w-full gap-4 p-4">
-    <!-- Left Panel: Toolbox & Structure -->
-    <Card class="w-full lg:w-1/4 flex flex-col h-fit @container/structure">
+    <!-- Left Panel: Form -->
+    <Card class="w-full lg:w-1/4 flex flex-col h-fit @container/form">
       <CardHeader>
-        <CardTitle>Structure</CardTitle>
+        <CardTitle>Form</CardTitle>
         <CardDescription>Manage steps and fields</CardDescription>
       </CardHeader>
       <CardContent class="flex-1 overflow-hidden flex flex-col gap-4">
@@ -455,7 +455,7 @@ onUnmounted(() => {
                   </div>
                 </VueDraggable>
                 
-                <div class="grid gap-2 @xs/structure:grid-cols-2">
+                <div class="grid gap-2 @xs/form:grid-cols-2">
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'input')"><Plus /> Input</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'select')"><Plus /> Select</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'checkbox')"><Plus /> Checkbox</Button>
@@ -477,7 +477,7 @@ onUnmounted(() => {
     <Tabs class="flex-1 flex flex-col h-fit" v-model="activeTab">
         <div class="flex items-center justify-between">
           <TabsList>
-            <TabsTrigger value="preview">Live Preview</TabsTrigger>
+            <TabsTrigger value="preview">Preview</TabsTrigger>
             <TabsTrigger value="code">Code</TabsTrigger>
           </TabsList>
         </div>
@@ -521,7 +521,7 @@ onUnmounted(() => {
     <!-- Right Panel: Properties -->
     <Card class="w-full lg:w-1/4 flex flex-col h-fit">
       <CardHeader>
-        <CardTitle>Properties</CardTitle>
+        <CardTitle>Field Properties</CardTitle>
         <CardDescription v-if="selectedField">Editing: {{ selectedField.label }}</CardDescription>
         <CardDescription v-else>Select a field to edit</CardDescription>
       </CardHeader>
@@ -533,7 +533,7 @@ onUnmounted(() => {
           </div>
           
           <div class="space-y-2">
-            <Label>Key (ID)</Label>
+            <Label>ID</Label>
             <Input v-model="selectedField.key" />
           </div>
           
@@ -652,7 +652,7 @@ onUnmounted(() => {
           
         </div>
         <div v-else class="text-center text-muted-foreground mt-10">
-          Click on a field in the structure or canvas to edit its properties.
+          Click on a field in the form to edit its properties.
         </div>
       </CardContent>
     </Card>

@@ -7,7 +7,7 @@ interface Props {
   title?: string
 }
 
-const { title = 'Form Builder' } = defineProps<Props>()
+const { title = 'AutoForm Builder' } = defineProps<Props>()
 
 const { theme, setTheme } = useTheme()
 
