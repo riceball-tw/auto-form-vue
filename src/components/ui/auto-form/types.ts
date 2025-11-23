@@ -63,6 +63,14 @@ export type FieldConfig =
     options: { label: string; value: string }[]
     dependencies?: Dependency[]
   }
+  | {
+    label: string
+    id: string
+    as: 'array'
+    rules: z.ZodTypeAny
+    schema: Record<string, FieldConfig>
+    dependencies?: Dependency[]
+  }
 
 // Utility type to infer form data from schema
 export type InferFormData = Record<string, any>

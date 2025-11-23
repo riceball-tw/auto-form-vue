@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Stepper, StepperDescription, StepperItem, StepperSeparator, StepperTitle, StepperTrigger } from '@/components/ui/stepper'
 import { FieldGroup } from '@/components/ui/field'
 import AutoField from './AutoField.vue'
+import AutoFormArray from './AutoFormArray.vue'
 import type { FieldConfig, InferFormData } from './types'
 
 const props = defineProps<{
@@ -172,7 +173,9 @@ const onFormSubmit = handleSubmit((data) => {
     <form @submit="onFormSubmit" class="mt-4">
       <FieldGroup>
         <div :class="isFieldInCurrentStep(field.id) ? '' : 'hidden'" :key="field.id" v-for="field in fields">
+          <AutoFormArray v-if="field.as === 'array'" :config="field" />
           <AutoField
+            v-else
             :config="field"
           />
         </div>
