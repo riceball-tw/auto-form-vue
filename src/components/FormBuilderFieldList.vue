@@ -82,8 +82,8 @@ const onSelect = (id: string) => emit('select', id)
         </Button>
       </div>
 
-      <!-- Array Children -->
-      <div v-if="field.type === 'array'" class="pl-4 ml-2 border-l-2 border-muted flex flex-col gap-2 mt-1">
+       <!-- Array Children -->
+       <div v-if="field.type === 'array'" class="pl-4 ml-2 border-l-2 border-muted flex flex-col gap-2 mt-1 @container">
         <div class="text-xs text-muted-foreground mb-1">Array Item Schema</div>
         
         <!-- Recursive List -->
@@ -96,8 +96,8 @@ const onSelect = (id: string) => emit('select', id)
           @remove="(idx) => removeChildField(field, idx)"
         />
 
-        <!-- Add Child Buttons -->
-        <div class="grid gap-2 grid-cols-2 sm:grid-cols-3 mt-2">
+         <!-- Add Child Buttons -->
+         <div class="grid gap-2 grid-cols-1 @sm:grid-cols-2 @md:grid-cols-3 mt-2">
            <Button class="justify-start h-7 text-xs" variant="outline" size="sm" @click.stop="addField(field, 'input')"><Plus class="w-3 h-3 mr-1" /> Input</Button>
            <Button class="justify-start h-7 text-xs" variant="outline" size="sm" @click.stop="addField(field, 'select')"><Plus class="w-3 h-3 mr-1" /> Select</Button>
            <Button class="justify-start h-7 text-xs" variant="outline" size="sm" @click.stop="addField(field, 'checkbox')"><Plus class="w-3 h-3 mr-1" /> Check</Button>
