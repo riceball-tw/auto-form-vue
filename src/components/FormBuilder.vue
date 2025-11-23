@@ -401,7 +401,8 @@ const updateHighlight = async () => {
     return
   }
   
-  const selector = `[name*="${selectedField.value.key}"]`
+  // Use data-field-key selector with ends-with matcher to handle nested fields
+  const selector = `[data-field-key$="${selectedField.value.key}"]`
   const fieldEl = document.querySelector(selector) as HTMLElement
   
   if (fieldEl && formContainer.value) {

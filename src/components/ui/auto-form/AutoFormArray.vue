@@ -83,7 +83,7 @@ const getModifiedConfig = (originalConfig: FieldConfig, index: number): FieldCon
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4" :data-field-key="config.id">
     <div class="flex items-center justify-between">
       <h3 class="text-sm font-medium">{{ config.label }}</h3>
     </div>
