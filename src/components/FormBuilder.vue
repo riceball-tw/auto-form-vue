@@ -101,7 +101,7 @@ const addField = (stepIndex: number, type: FieldType) => {
     key: `field_${generateId()}`,
     type,
     required: true,
-    options: type === 'select' || type === 'checkbox' ? [{ label: `${faker.animal.type()}`, value: 'opt1' }] : undefined,
+    options: type === 'select' || type === 'checkbox' ? [{ label: `${faker.animal.type()}`, value: 'option-1' }] : undefined,
     zodRules: '',
     dependencies: []
   }
@@ -122,7 +122,7 @@ const removeField = (stepIndex: number, fieldIndex: number) => {
 
 const addOption = (field: BuilderField) => {
   if (!field.options) field.options = []
-  field.options.push({ label: `${faker.word.noun()}`, value: 'new-opt' })
+  field.options.push({ label: `${faker.animal.type()}`, value: `option-${field.options.length + 1}` })
 }
 
 const removeOption = (field: BuilderField, index: number) => {
@@ -148,7 +148,7 @@ const removeDependency = (field: BuilderField, index: number) => {
 
 const addDependencyOption = (dep: BuilderDependency) => {
   if (!dep.options) dep.options = []
-  dep.options.push({ label: 'New Option', value: 'new-opt' })
+  dep.options.push({ label: faker.animal.type(), value: `option-${dep.options.length + 1}` })
 }
 
 const removeDependencyOption = (dep: BuilderDependency, index: number) => {
