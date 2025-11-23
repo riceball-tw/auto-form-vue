@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Field as VeeField } from 'vee-validate'
 import { z } from 'zod'
 import { Field, FieldLabel, FieldError, FieldDescription } from '@/components/ui/field'
@@ -25,7 +26,7 @@ const getFieldDescription = (rules: z.ZodTypeAny): string | undefined => {
   return rules.description
 }
 
-const description = getFieldDescription(props.config.rules)
+const description = computed(() => getFieldDescription(props.config.rules))
 </script>
 
 <template>
