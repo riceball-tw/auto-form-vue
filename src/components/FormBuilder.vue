@@ -163,6 +163,7 @@ const generateFieldCode = (field: BuilderField, indentLevel: number = 2): string
           }
           r += `${'  '.repeat(level)}}))`
       }
+      else if (f.type === 'date') r += `date()`
       else r += `string()`
       
       if (f.zodRules) r += f.zodRules
@@ -286,6 +287,8 @@ const buildZodRule = (field: BuilderField) => {
             })
         }
         zodRule = z.array(z.object(shape))
+    } else if (field.type === 'date') {
+        zodRule = z.date()
     } else {
     zodRule = z.string()
     }
@@ -306,6 +309,8 @@ const buildZodRule = (field: BuilderField) => {
             }
         } else if (field.type === 'array') {
              ruleString = `z.array(z.object({}))`
+        } else if (field.type === 'date') {
+            ruleString = `z.date()`
         } else {
             ruleString = `z.string()`
         }
@@ -486,6 +491,7 @@ onUnmounted(() => {
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'radio')"><Plus /> Radio</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'switch')"><Plus /> Switch</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'textarea')"><Plus /> Textarea</Button>
+                  <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'date')"><Plus /> Date</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'array')"><Plus /> Array</Button>
                 </div>
               </div>

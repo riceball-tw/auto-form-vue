@@ -1,4 +1,4 @@
-export type FieldType = 'input' | 'textarea' | 'select' | 'checkbox' | 'switch' | 'radio' | 'array'
+export type FieldType = 'input' | 'textarea' | 'select' | 'checkbox' | 'switch' | 'radio' | 'array' | 'date'
 
 export interface FieldOption {
     label: string

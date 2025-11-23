@@ -9,6 +9,12 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { DateFormatter, type DateValue, getLocalTimeZone, fromDate } from '@internationalized/date'
+import { CalendarIcon } from 'lucide-vue-next'
 import type { FieldConfig } from './types'
 
 const props = defineProps<{
@@ -114,6 +120,32 @@ const description = getFieldDescription(props.config.rules)
               <Label :for="`auto-field-${config.id}-${option.value}`">{{ option.label }}</Label>
             </div>
           </RadioGroup>
+        </div>
+
+        <div v-else-if="config.as === 'date'" :data-field-key="config.id">
+          <Popover>
+            <PopoverTrigger as-child>
+              <Button
+                variant="outline"
+                :class="cn(
+                  'w-full justify-start text-left font-normal',
+                  !field.value && 'text-muted-foreground',
+                )"
+              >
+                <CalendarIcon class="mr-2 h-4 w-4" />
+                {{ field.value ? new DateFormatter('en-US', { dateStyle: 'long' }).format(new Date(field.value)) : (config.placeholder || "Pick a date") }}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent class="w-auto p-0">
+              <Calendar
+                :model-value="field.value ? fromDate(new Date(field.value), getLocalTimeZone()) : undefined"
+                @update:model-value="(v: DateValue | undefined) => {
+                  field.onChange(v ? v.toDate(getLocalTimeZone()) : undefined)
+                }"
+                initial-focus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
        

@@ -66,6 +66,14 @@ export type FieldConfig =
   | {
     label: string
     id: string
+    as: 'date'
+    rules: z.ZodTypeAny
+    placeholder?: string
+    dependencies?: Dependency[]
+  }
+  | {
+    label: string
+    id: string
     as: 'array'
     rules: z.ZodTypeAny
     schema: Record<string, FieldConfig>
