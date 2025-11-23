@@ -350,6 +350,44 @@ const previewSchema = computed(() => {
   }
 })
 
+// Highlight logic for Live Preview
+import { nextTick, watch } from 'vue'
+
+const highlightClasses = [
+  'relative', 'z-0',
+  'after:absolute', 'after:-inset-2', 'after:bg-muted', 'after:rounded-md', 
+  'after:ring-1', 'after:ring-muted-foreground', 'after:-z-10',
+  'after:transition-all', 'after:ease-out',
+]
+
+const updateHighlight = async () => {
+  await nextTick() // Wait for DOM update
+  
+  // Remove highlight from all previously highlighted fields
+  const highlighted = document.querySelectorAll('[data-highlighted="true"]')
+  highlighted.forEach(el => {
+    el.classList.remove(...highlightClasses)
+    el.removeAttribute('data-highlighted')
+  })
+
+  if (!selectedFieldId.value || !selectedField.value || activeTab.value !== 'preview') return
+
+  const selector = `[data-field-key="${selectedField.value.key}"]`
+  const fieldEl = document.querySelector(selector)
+  
+  if (fieldEl) {
+    fieldEl.classList.add(...highlightClasses)
+    fieldEl.setAttribute('data-highlighted', 'true')
+    
+    // Scroll into view if needed?
+    fieldEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }
+}
+
+watch([selectedFieldId, activeTab, previewSchema], () => {
+  updateHighlight()
+}, { flush: 'post', deep: true })
+
 </script>
 
 <template>

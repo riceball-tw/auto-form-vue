@@ -22,7 +22,7 @@ const description = getFieldDescription(props.config.rules)
 
 <template>
   <VeeField v-slot="{ field, errors }" :name="config.id">
-    <Field :data-invalid="!!errors.length">
+    <Field :data-invalid="!!errors.length" :data-field-key="config.id">
       <FieldLabel :for="`auto-field-${config.id}`">
         {{ config.label }}
       </FieldLabel>
@@ -59,7 +59,7 @@ const description = getFieldDescription(props.config.rules)
          </SelectContent>
        </Select>
 
-       <div v-else-if="config.as === 'checkbox'" class="space-y-2">
+       <div v-else-if="config.as === 'checkbox'" class="space-y-2" :data-field-key="config.id">
          <Field
            v-for="option in config.options"
            :key="option.value"
@@ -91,7 +91,7 @@ const description = getFieldDescription(props.config.rules)
          </Field>
         </div>
 
-        <div v-else-if="config.as === 'switch'">
+        <div v-else-if="config.as === 'switch'" :data-field-key="config.id">
           <Switch
             :id="`auto-field-${config.id}`"
             :model-value="field.value"
