@@ -362,49 +362,59 @@ const previewSchema = computed(() => {
       </CardHeader>
       <CardContent class="flex-1 overflow-hidden flex flex-col gap-4">
         <ScrollArea class="flex-1 pr-4">
-          <div v-for="(step, sIndex) in steps" :key:="step.id" class="mb-6">
-            <div class="flex flex-col gap-2 mb-2">
-              <div class="flex items-center justify-between">
-                <Input v-model="step.title" class="font-semibold text-sm" placeholder="Step Title" />
-                <Button variant="ghost" size="icon" @click="removeStep(sIndex)" :disabled="steps.length === 1" class="ml-2">
-                  <Trash2 class="w-4 h-4 text-destructive" />
-                </Button>
-              </div>
-              <Input v-model="step.description" class="text-xs text-muted-foreground" placeholder="Step Description" />
-            </div>
-            
-            <div class="space-y-2 pl-2 border-l-2 border-muted">
-              <VueDraggable 
-                v-model="step.fields" 
-                :animation="150"
-                handle=".drag-handle"
-                class="space-y-2"
-              >
-                <div 
-                  v-for="(field, fIndex) in step.fields" 
-                  :key="field.id"
-                  class="flex items-center gap-2 p-2 rounded-md cursor-pointer hover:bg-muted transition-colors"
-                  :class="{ 'bg-muted': selectedFieldId === field.id }"
-                  @click="selectedFieldId = field.id"
-                >
-                  <GripVertical class="w-4 h-4 text-muted-foreground drag-handle cursor-grab active:cursor-grabbing" />
-                  <span class="text-sm truncate flex-1">{{ field.label }}</span>
-                  <span class="text-xs text-muted-foreground uppercase">{{ field.type }}</span>
-                  <Button variant="ghost" size="icon" class="h-6 w-6" @click.stop="removeField(sIndex, fIndex)">
-                    <Trash2 class="w-3 h-3" />
+
+          <VueDraggable
+            v-model="steps"
+            :animation="150"
+            handle=".step-drag-handle"
+            class="flex flex-col gap-4"
+          >
+            <div v-for="(step, sIndex) in steps" :key="step.id" class="mb-6">
+              <div class="flex flex-col gap-2 mb-2">
+                <div class="flex items-center justify-between">
+                  <GripVertical class="w-4 h-4 text-muted-foreground step-drag-handle cursor-grab active:cursor-grabbing mr-2" />
+                  <Input v-model="step.title" class="font-semibold text-sm flex-1" placeholder="Step Title" />
+                  <Button variant="ghost" size="icon" @click="removeStep(sIndex)" :disabled="steps.length === 1" class="ml-2">
+                    <Trash2 class="w-4 h-4 text-destructive" />
                   </Button>
                 </div>
-              </VueDraggable>
+                <Input v-model="step.description" class="text-xs text-muted-foreground ml-6" placeholder="Step Description" />
+              </div>
               
-              <div class="grid grid-cols-2 gap-2 mt-2">
-                <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'input')"><Plus /> Input</Button>
-                <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'select')"><Plus /> Select</Button>
-                <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'checkbox')"><Plus /> Checkbox</Button>
-                <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'switch')"><Plus /> Switch</Button>
-                <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'textarea')"><Plus /> Textarea</Button>
+              <div class="space-y-2 pl-8 border-l-2 border-muted ml-2">
+                <VueDraggable 
+                  v-model="step.fields" 
+                  :animation="150"
+                  handle=".drag-handle"
+                  class="space-y-2"
+                  group="fields"
+                >
+                  <div 
+                    v-for="(field, fIndex) in step.fields" 
+                    :key="field.id"
+                    class="flex items-center gap-2 p-2 rounded-md cursor-pointer hover:bg-muted transition-colors"
+                    :class="{ 'bg-muted': selectedFieldId === field.id }"
+                    @click="selectedFieldId = field.id"
+                  >
+                    <GripVertical class="w-4 h-4 text-muted-foreground drag-handle cursor-grab active:cursor-grabbing" />
+                    <span class="text-sm truncate flex-1">{{ field.label }}</span>
+                    <span class="text-xs text-muted-foreground uppercase">{{ field.type }}</span>
+                    <Button variant="ghost" size="icon" class="h-6 w-6" @click.stop="removeField(sIndex, fIndex)">
+                      <Trash2 class="w-3 h-3" />
+                    </Button>
+                  </div>
+                </VueDraggable>
+                
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                  <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'input')"><Plus /> Input</Button>
+                  <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'select')"><Plus /> Select</Button>
+                  <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'checkbox')"><Plus /> Checkbox</Button>
+                  <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'switch')"><Plus /> Switch</Button>
+                  <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'textarea')"><Plus /> Textarea</Button>
+                </div>
               </div>
             </div>
-          </div>
+          </VueDraggable>
           
           <Button class="w-full mt-4 flex" variant="secondary" @click="addStep">
             <Plus class="w-4 h-4 mr-2" /> Add Step
