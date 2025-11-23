@@ -18,7 +18,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 import { faker } from '@faker-js/faker'
 
 // Types for our builder state
-type FieldType = 'input' | 'textarea' | 'select' | 'checkbox' | 'switch'
+type FieldType = 'input' | 'textarea' | 'select' | 'checkbox' | 'switch' | 'radio'
 
 interface FieldOption {
   label: string
@@ -101,7 +101,7 @@ const addField = (stepIndex: number, type: FieldType) => {
     key: `field_${generateId()}`,
     type,
     required: true,
-    options: type === 'select' || type === 'checkbox' ? [{ label: `${faker.animal.type()}`, value: 'option-1' }] : undefined,
+    options: type === 'select' || type === 'checkbox' || type === 'radio' ? [{ label: `${faker.animal.type()}`, value: 'option-1' }] : undefined,
     zodRules: '',
     dependencies: []
   }
@@ -179,6 +179,12 @@ const generatedCode = computed(() => {
         rules += `array(z.string())`
       } else if (field.type === 'switch') {
         rules += `boolean()`
+      } else if (field.type === 'radio') {
+        if (field.options && field.options.length > 0) {
+           rules += `enum([${field.options.map(o => `'${o.value}'`).join(', ')}])`
+        } else {
+           rules += `string()` // Fallback for empty options
+        }
       } else {
         rules += `string()`
       }
@@ -278,6 +284,13 @@ const previewSchema = computed(() => {
         zodRule = z.array(z.string())
       } else if (field.type === 'switch') {
         zodRule = z.boolean()
+      } else if (field.type === 'radio') {
+        const values = field.options?.map(o => o.value)
+        if (values && values.length > 0) {
+          zodRule = z.enum(values as [string, ...string[]])
+        } else {
+          zodRule = z.string()
+        }
       } else {
         zodRule = z.string()
       }
@@ -294,6 +307,12 @@ const previewSchema = computed(() => {
              ruleString = `z.array(z.string())`
           } else if (field.type === 'switch') {
              ruleString = `z.boolean()`
+          } else if (field.type === 'radio') {
+             if (field.options && field.options.length > 0) {
+               ruleString = `z.enum([${field.options.map(o => `'${o.value}'`).join(', ')}])`
+             } else {
+               ruleString = `z.string()`
+             }
           } else {
              ruleString = `z.string()`
           }
@@ -459,6 +478,7 @@ onUnmounted(() => {
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'input')"><Plus /> Input</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'select')"><Plus /> Select</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'checkbox')"><Plus /> Checkbox</Button>
+                  <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'radio')"><Plus /> Radio</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'switch')"><Plus /> Switch</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'textarea')"><Plus /> Textarea</Button>
                 </div>

@@ -3,10 +3,12 @@ import { Field as VeeField } from 'vee-validate'
 import { z } from 'zod'
 import { Field, FieldLabel, FieldError, FieldDescription } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { InputGroup, InputGroupTextarea } from '@/components/ui/input-group'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import type { FieldConfig } from './types'
 
 const props = defineProps<{
@@ -98,6 +100,20 @@ const description = getFieldDescription(props.config.rules)
             @update:model-value="field.onChange"
             :aria-invalid="!!errors.length"
           />
+        </div>
+
+        <div v-else-if="config.as === 'radio'" :data-field-key="config.id">
+          <RadioGroup
+            :id="`auto-field-${config.id}`"
+            :model-value="field.value"
+            @update:model-value="field.onChange"
+            :aria-invalid="!!errors.length"
+          >
+            <div v-for="option in config.options" :key="option.value" class="flex items-center space-x-2">
+              <RadioGroupItem :id="`auto-field-${config.id}-${option.value}`" :value="option.value" />
+              <Label :for="`auto-field-${config.id}-${option.value}`">{{ option.label }}</Label>
+            </div>
+          </RadioGroup>
         </div>
 
        
