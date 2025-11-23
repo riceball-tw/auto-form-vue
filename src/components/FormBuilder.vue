@@ -351,42 +351,53 @@ const previewSchema = computed(() => {
 })
 
 // Highlight logic for Live Preview
-import { nextTick, watch } from 'vue'
+import { nextTick, watch, onMounted, onUnmounted } from 'vue'
 
-const highlightClasses = [
-  'relative', 'z-0',
-  'after:absolute', 'after:-inset-2', 'after:bg-muted', 'after:rounded-md', 
-  'after:ring-1', 'after:ring-muted-foreground', 'after:-z-10',
-  'after:transition-all', 'after:ease-out',
-]
+const highlightStyle = ref<Record<string, string> | null>(null)
+const formContainer = ref<HTMLElement | null>(null)
 
 const updateHighlight = async () => {
   await nextTick() // Wait for DOM update
   
-  // Remove highlight from all previously highlighted fields
-  const highlighted = document.querySelectorAll('[data-highlighted="true"]')
-  highlighted.forEach(el => {
-    el.classList.remove(...highlightClasses)
-    el.removeAttribute('data-highlighted')
-  })
-
-  if (!selectedFieldId.value || !selectedField.value || activeTab.value !== 'preview') return
+  if (!selectedFieldId.value || !selectedField.value || activeTab.value !== 'preview' || !formContainer.value) {
+    highlightStyle.value = null
+    return
+  }
 
   const selector = `[data-field-key="${selectedField.value.key}"]`
-  const fieldEl = document.querySelector(selector)
+  const fieldEl = document.querySelector(selector) as HTMLElement
   
-  if (fieldEl) {
-    fieldEl.classList.add(...highlightClasses)
-    fieldEl.setAttribute('data-highlighted', 'true')
+  if (fieldEl && formContainer.value) {
+    const containerRect = formContainer.value.getBoundingClientRect()
+    const fieldRect = fieldEl.getBoundingClientRect()
     
-    // Scroll into view if needed?
-    fieldEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    // Calculate relative position
+    const top = fieldRect.top - containerRect.top
+    const left = fieldRect.left - containerRect.left
+    
+    highlightStyle.value = {
+      top: `${top - 8}px`, // -8px padding
+      left: `${left - 8}px`,
+      width: `${fieldRect.width + 16}px`, // +16px total padding
+      height: `${fieldRect.height + 16}px`,
+    }
+  } else {
+    highlightStyle.value = null
   }
 }
 
 watch([selectedFieldId, activeTab, previewSchema], () => {
   updateHighlight()
 }, { flush: 'post', deep: true })
+
+// Update on resize
+onMounted(() => {
+  window.addEventListener('resize', updateHighlight)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateHighlight)
+})
 
 </script>
 
@@ -473,7 +484,13 @@ watch([selectedFieldId, activeTab, previewSchema], () => {
       <Card class="p-0">
         <div class="flex-1 flex flex-col w-full">
           <TabsContent value="preview" class="flex-1 p-8 overflow-auto">
-            <div class="max-w-2xl mx-auto">
+            <div class="max-w-2xl mx-auto relative" ref="formContainer">
+              <div 
+                v-if="highlightStyle"
+                class="absolute bg-muted/50 border border-muted-foreground/20 rounded-md -z-0 transition-all duration-300 ease-out pointer-events-none"
+                :style="highlightStyle"
+              ></div>
+              <div class="relative z-10">
               <AutoForm
                 :schema="previewSchema"
                 :on-submit="(data) => {
@@ -482,6 +499,7 @@ watch([selectedFieldId, activeTab, previewSchema], () => {
                   })
                 }"
               />
+              </div>
             </div>
           </TabsContent>
           
