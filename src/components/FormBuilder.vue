@@ -355,7 +355,7 @@ const previewSchema = computed(() => {
 <template>
   <div class="flex flex-col lg:flex-row w-full gap-4 p-4">
     <!-- Left Panel: Toolbox & Structure -->
-    <Card class="w-full lg:w-1/4 flex flex-col h-fit">
+    <Card class="w-full lg:w-1/4 flex flex-col h-fit @container/structure">
       <CardHeader>
         <CardTitle>Structure</CardTitle>
         <CardDescription>Manage steps and fields</CardDescription>
@@ -378,10 +378,11 @@ const previewSchema = computed(() => {
                     <Trash2 class="w-4 h-4 text-destructive" />
                   </Button>
                 </div>
-                <Input v-model="step.description" class="text-xs text-muted-foreground ml-6" placeholder="Step Description" />
               </div>
               
-              <div class="space-y-2 pl-8 border-l-2 border-muted ml-2">
+              <div class="flex flex-col gap-2 pl-8 border-l-2 border-muted ml-2">
+                <Input v-model="step.description" class="mb-0 text-xs text-muted-foreground" placeholder="Step Description" />
+
                 <VueDraggable 
                   v-model="step.fields" 
                   :animation="150"
@@ -405,7 +406,7 @@ const previewSchema = computed(() => {
                   </div>
                 </VueDraggable>
                 
-                <div class="grid grid-cols-2 gap-2 mt-2">
+                <div class="grid gap-2 @xs/structure:grid-cols-2">
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'input')"><Plus /> Input</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'select')"><Plus /> Select</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'checkbox')"><Plus /> Checkbox</Button>
