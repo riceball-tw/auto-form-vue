@@ -397,16 +397,16 @@ const previewSchema = computed(() => {
               </VueDraggable>
               
               <div class="grid grid-cols-2 gap-2 mt-2">
-                <Button variant="outline" size="sm" @click="addField(sIndex, 'input')">+ Input</Button>
-                <Button variant="outline" size="sm" @click="addField(sIndex, 'select')">+ Select</Button>
-                <Button variant="outline" size="sm" @click="addField(sIndex, 'checkbox')">+ Checkbox</Button>
-                <Button variant="outline" size="sm" @click="addField(sIndex, 'switch')">+ Switch</Button>
-                <Button variant="outline" size="sm" @click="addField(sIndex, 'textarea')">+ Textarea</Button>
+                <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'input')"><Plus /> Input</Button>
+                <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'select')"><Plus /> Select</Button>
+                <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'checkbox')"><Plus /> Checkbox</Button>
+                <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'switch')"><Plus /> Switch</Button>
+                <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'textarea')"><Plus /> Textarea</Button>
               </div>
             </div>
           </div>
           
-          <Button class="w-full mt-4" variant="secondary" @click="addStep">
+          <Button class="w-full mt-4 flex" variant="secondary" @click="addStep">
             <Plus class="w-4 h-4 mr-2" /> Add Step
           </Button>
         </ScrollArea>
