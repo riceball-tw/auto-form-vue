@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, h } from 'vue'
+import { ref, computed, h, nextTick, watch, onMounted, onUnmounted } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,41 +17,8 @@ import * as z from 'zod'
 import { VueDraggable } from 'vue-draggable-plus'
 import { faker } from '@faker-js/faker'
 
-// Types for our builder state
-type FieldType = 'input' | 'textarea' | 'select' | 'checkbox' | 'switch' | 'radio'
-
-interface FieldOption {
-  label: string
-  value: string
-}
-
-interface BuilderDependency {
-  sourceField: string
-  type: 'HIDES' | 'SETS_OPTIONS'
-  value: string
-  options?: FieldOption[]
-}
-
-interface BuilderField {
-  id: string
-  label: string
-  key: string // The object key in the schema
-  type: FieldType
-  placeholder?: string
-  required: boolean
-  description?: string
-  options?: FieldOption[] // For select/checkbox
-  // Generic Zod Rule Chain
-  zodRules?: string // e.g. ".min(5).email()"
-  dependencies?: BuilderDependency[]
-}
-
-interface BuilderStep {
-  id: string
-  title: string
-  description: string
-  fields: BuilderField[]
-}
+import type { BuilderStep, BuilderField, FieldType, BuilderDependency } from './FormBuilderTypes'
+import FormBuilderFieldList from './FormBuilderFieldList.vue'
 
 // Initial State
 const steps = ref<BuilderStep[]>([
@@ -69,11 +36,23 @@ const activeTab = ref('preview') // 'preview' | 'code'
 // Helper to generate unique IDs
 const generateId = () => Math.random().toString(36).substring(2, 9)
 
+// Recursive search for field
+const findFieldRecursive = (fields: BuilderField[], id: string): BuilderField | null => {
+  for (const field of fields) {
+    if (field.id === id) return field
+    if (field.children) {
+      const found = findFieldRecursive(field.children, id)
+      if (found) return found
+    }
+  }
+  return null
+}
+
 // Computed: Selected Field
 const selectedField = computed(() => {
   if (!selectedFieldId.value) return null
   for (const step of steps.value) {
-    const field = step.fields.find(f => f.id === selectedFieldId.value)
+    const field = findFieldRecursive(step.fields, selectedFieldId.value)
     if (field) return field
   }
   return null
@@ -103,7 +82,8 @@ const addField = (stepIndex: number, type: FieldType) => {
     required: true,
     options: type === 'select' || type === 'checkbox' || type === 'radio' ? [{ label: `${faker.animal.type()}`, value: 'option-1' }] : undefined,
     zodRules: '',
-    dependencies: []
+    dependencies: [],
+    children: type === 'array' ? [] : undefined
   }
   steps.value[stepIndex].fields.push(newField)
   selectedFieldId.value = newField.id
@@ -157,6 +137,96 @@ const removeDependencyOption = (dep: BuilderDependency, index: number) => {
   }
 }
 
+// Code Generation Helper
+const generateFieldCode = (field: BuilderField, indentLevel: number = 2): string => {
+  const indent = '  '.repeat(indentLevel)
+  let code = `${indent}${field.key}: {\n`
+  code += `${indent}  label: '${field.label}',\n`
+  code += `${indent}  id: '${field.key}',\n`
+  code += `${indent}  as: '${field.type}' as const,\n`
+  
+  // Refactored Rule Generation to handle recursion properly
+  const getZodRuleString = (f: BuilderField, level: number): string => {
+      let r = `z.`
+      if (f.type === 'checkbox') r += `array(z.string())`
+      else if (f.type === 'switch') r += `boolean()`
+      else if (f.type === 'radio') {
+          if (f.options && f.options.length > 0) r += `enum([${f.options.map(o => `'${o.value}'`).join(', ')}])`
+          else r += `string()`
+      }
+      else if (f.type === 'array') {
+          r += `array(z.object({\n`
+          if (f.children) {
+              f.children.forEach(child => {
+                  r += `${'  '.repeat(level + 1)}${child.key}: ${getZodRuleString(child, level + 1)},\n`
+              })
+          }
+          r += `${'  '.repeat(level)}}))`
+      }
+      else r += `string()`
+      
+      if (f.zodRules) r += f.zodRules
+      
+      if (!f.required && f.type !== 'switch' && f.type !== 'checkbox') {
+          r += `.optional()`
+      }
+      
+      if (f.description) {
+          r += `.describe('${f.description}')`
+      }
+      return r
+  }
+
+  code += `${indent}  rules: ${getZodRuleString(field, indentLevel + 2)},\n`
+
+  if (field.type === 'array' && field.children) {
+      code += `${indent}  schema: {\n`
+      field.children.forEach(child => {
+          code += generateFieldCode(child, indentLevel + 2)
+      })
+      code += `${indent}  },\n`
+  }
+  
+  if (field.placeholder) {
+    code += `${indent}  placeholder: '${field.placeholder}',\n`
+  }
+  
+  if (field.options) {
+    code += `${indent}  options: [\n`
+    field.options.forEach(opt => {
+      code += `${indent}    { label: '${opt.label}', value: '${opt.value}' },\n`
+    })
+    code += `${indent}  ],\n`
+  }
+
+  if (field.dependencies && field.dependencies.length > 0) {
+    code += `${indent}  dependencies: [\n`
+    field.dependencies.forEach(dep => {
+      code += `${indent}    {\n`
+      code += `${indent}      sourceField: '${dep.sourceField}',\n`
+      code += `${indent}      type: '${dep.type}',\n`
+      
+      if (dep.type === 'HIDES') {
+         code += `${indent}      when: (val) => val === '${dep.value}',\n`
+      } else if (dep.type === 'SETS_OPTIONS') {
+         code += `${indent}      when: (sourceVal, targetVal) => sourceVal === '${dep.value}',\n`
+         if (dep.options) {
+           code += `${indent}      options: [\n`
+           dep.options.forEach(opt => {
+             code += `${indent}        { label: '${opt.label}', value: '${opt.value}' },\n`
+           })
+           code += `${indent}      ],\n`
+         }
+      }
+      code += `${indent}    },\n`
+    })
+    code += `${indent}  ],\n`
+  }
+  
+  code += `${indent}  },\n`
+  return code
+}
+
 // Code Generation
 const generatedCode = computed(() => {
   let code = `import { z } from 'zod'\n\n`
@@ -168,87 +238,7 @@ const generatedCode = computed(() => {
     code += `  fields: {\n`
     
     step.fields.forEach(field => {
-      code += `    ${field.key}: {\n`
-      code += `      label: '${field.label}',\n`
-      code += `      id: '${field.key}',\n`
-      code += `      as: '${field.type}' as const,\n`
-      
-      // Rules generation
-      let rules = `z.`
-      if (field.type === 'checkbox') {
-        rules += `array(z.string())`
-      } else if (field.type === 'switch') {
-        rules += `boolean()`
-      } else if (field.type === 'radio') {
-        if (field.options && field.options.length > 0) {
-           rules += `enum([${field.options.map(o => `'${o.value}'`).join(', ')}])`
-        } else {
-           rules += `string()` // Fallback for empty options
-        }
-      } else {
-        rules += `string()`
-      }
-
-      // Append user provided rules
-      if (field.zodRules) {
-        rules += field.zodRules
-      }
-      
-      if (!field.required && field.type !== 'switch' && field.type !== 'checkbox') {
-        // Only add optional if it's not already there? 
-        // User might have added .optional() manually, but let's keep the checkbox for convenience
-        // or maybe we should remove the 'Required' switch if we want full raw control?
-        // The user request said "let user enter the rule they want", but "Required" is a very basic one.
-        // Let's keep "Required" switch as a high-level toggle that appends .optional() if false.
-        rules += `.optional()`
-      }
-      
-       if (field.description) {
-         rules += `.describe('${field.description}')`
-       }
-      
-      code += `      rules: ${rules},\n`
-      
-      if (field.placeholder) {
-        code += `      placeholder: '${field.placeholder}',\n`
-      }
-      
-      if (field.options) {
-        code += `      options: [\n`
-        field.options.forEach(opt => {
-          code += `        { label: '${opt.label}', value: '${opt.value}' },\n`
-        })
-        code += `      ],\n`
-      }
-
-      if (field.dependencies && field.dependencies.length > 0) {
-        code += `      dependencies: [\n`
-        field.dependencies.forEach(dep => {
-          code += `        {\n`
-          code += `          sourceField: '${dep.sourceField}',\n`
-          code += `          type: '${dep.type}',\n`
-          
-          if (dep.type === 'HIDES') {
-             // HIDES means "Hide if true". 
-             // If we want "Show if X=Y", we need "Hide if X!=Y".
-             // Let's assume the UI says "Hide when source equals value" for simplicity first as per plan.
-             code += `          when: (val) => val === '${dep.value}',\n`
-          } else if (dep.type === 'SETS_OPTIONS') {
-             code += `          when: (sourceVal, targetVal) => sourceVal === '${dep.value}',\n`
-             if (dep.options) {
-               code += `          options: [\n`
-               dep.options.forEach(opt => {
-                 code += `            { label: '${opt.label}', value: '${opt.value}' },\n`
-               })
-               code += `          ],\n`
-             }
-          }
-          code += `        },\n`
-        })
-        code += `      ],\n`
-      }
-      
-      code += `    },\n`
+      code += generateFieldCode(field, 2)
     })
     
     code += `  }\n`
@@ -271,77 +261,89 @@ const generatedCode = computed(() => {
    }
  }
 
- // Live Preview Schema Construction
-const previewSchema = computed(() => {
-  const schemaSteps = steps.value.map(step => {
-    const fields: Record<string, any> = {}
-    
-    step.fields.forEach(field => {
-      let zodRule: any
+// Live Preview Schema Construction
+const buildZodRule = (field: BuilderField) => {
+    let zodRule: any
       
-      // Base Type
-      if (field.type === 'checkbox') {
-        zodRule = z.array(z.string())
-      } else if (field.type === 'switch') {
-        zodRule = z.boolean()
-      } else if (field.type === 'radio') {
-        const values = field.options?.map(o => o.value)
-        if (values && values.length > 0) {
-          zodRule = z.enum(values as [string, ...string[]])
-        } else {
-          zodRule = z.string()
-        }
-      } else {
+    // Base Type
+    if (field.type === 'checkbox') {
+    zodRule = z.array(z.string())
+    } else if (field.type === 'switch') {
+    zodRule = z.boolean()
+    } else if (field.type === 'radio') {
+    const values = field.options?.map(o => o.value)
+    if (values && values.length > 0) {
+        zodRule = z.enum(values as [string, ...string[]])
+    } else {
         zodRule = z.string()
-      }
-
-      // Apply raw rules
-      if (field.zodRules) {
-        try {
-          // Create a function that takes 'z' and the base rule, and returns the modified rule
-          // But wait, the user types ".min(5)". We can't easily chain that to an object in eval without the object.
-          // Alternative: Construct the full string "z.string().min(5)" and eval that.
-          
-          let ruleString = ''
-          if (field.type === 'checkbox') {
-             ruleString = `z.array(z.string())`
-          } else if (field.type === 'switch') {
-             ruleString = `z.boolean()`
-          } else if (field.type === 'radio') {
-             if (field.options && field.options.length > 0) {
-               ruleString = `z.enum([${field.options.map(o => `'${o.value}'`).join(', ')}])`
-             } else {
-               ruleString = `z.string()`
-             }
-          } else {
-             ruleString = `z.string()`
-          }
-          
-          ruleString += field.zodRules
-          
-          // Safe(r) Eval
-          const evalFn = new Function('z', `return ${ruleString}`)
-          zodRule = evalFn(z)
-          
-        } catch (e) {
-          console.error(`Invalid Zod rule for field ${field.key}:`, e)
-          // Fallback or show error? For now just ignore invalid rules in preview
+    }
+    } else if (field.type === 'array') {
+        // Recursive Zod Object
+        const shape: Record<string, any> = {}
+        if (field.children) {
+            field.children.forEach(child => {
+                shape[child.key] = buildZodRule(child)
+            })
         }
-      }
-      
-      if (!field.required && field.type !== 'switch' && field.type !== 'checkbox') {
-        zodRule = zodRule.optional()
-      }
-      
-       if (field.description) {
-         zodRule = zodRule.describe(field.description)
-       }
-      
-      fields[field.key] = {
+        zodRule = z.array(z.object(shape))
+    } else {
+    zodRule = z.string()
+    }
+
+    // Apply raw rules
+    if (field.zodRules) {
+    try {
+        let ruleString = ''
+        if (field.type === 'checkbox') {
+            ruleString = `z.array(z.string())`
+        } else if (field.type === 'switch') {
+            ruleString = `z.boolean()`
+        } else if (field.type === 'radio') {
+            if (field.options && field.options.length > 0) {
+            ruleString = `z.enum([${field.options.map(o => `'${o.value}'`).join(', ')}])`
+            } else {
+            ruleString = `z.string()`
+            }
+        } else if (field.type === 'array') {
+             ruleString = `z.array(z.object({}))`
+        } else {
+            ruleString = `z.string()`
+        }
+        
+        ruleString += field.zodRules
+        
+        const evalFn = new Function('z', `return ${ruleString}`)
+        
+        if (field.type !== 'array') {
+            zodRule = evalFn(z)
+        } else {
+            // For array, we just want to chain methods to the existing zodRule object
+            // This is hard to do with eval string without the object.
+            // Let's skip raw rules for array in preview for now to avoid breaking it.
+        }
+        
+    } catch (e) {
+        console.error(`Invalid Zod rule for field ${field.key}:`, e)
+    }
+    }
+    
+    if (!field.required && field.type !== 'switch' && field.type !== 'checkbox') {
+    zodRule = zodRule.optional()
+    }
+    
+    if (field.description) {
+        zodRule = zodRule.describe(field.description)
+    }
+
+    return zodRule
+}
+
+const buildFieldConfig = (field: BuilderField): any => {
+    const config: any = {
         label: field.label,
         id: field.key,
         as: field.type,
-        rules: zodRule,
+        rules: buildZodRule(field),
         placeholder: field.placeholder,
         options: field.options,
         dependencies: field.dependencies?.map(dep => {
@@ -354,7 +356,25 @@ const previewSchema = computed(() => {
             options: dep.options
           }
         })
-      }
+    }
+
+    if (field.type === 'array' && field.children) {
+        const schema: Record<string, any> = {}
+        field.children.forEach(child => {
+            schema[child.key] = buildFieldConfig(child)
+        })
+        config.schema = schema
+    }
+
+    return config
+}
+
+const previewSchema = computed(() => {
+  const schemaSteps = steps.value.map(step => {
+    const fields: Record<string, any> = {}
+    
+    step.fields.forEach(field => {
+      fields[field.key] = buildFieldConfig(field)
     })
     
     return {
@@ -370,8 +390,6 @@ const previewSchema = computed(() => {
 })
 
 // Highlight logic for Live Preview
-import { nextTick, watch, onMounted, onUnmounted } from 'vue'
-
 const highlightStyle = ref<Record<string, string> | null>(null)
 const formContainer = ref<HTMLElement | null>(null)
 
@@ -382,8 +400,8 @@ const updateHighlight = async () => {
     highlightStyle.value = null
     return
   }
-
-  const selector = `[data-field-key="${selectedField.value.key}"]`
+  
+  const selector = `[name*="${selectedField.value.key}"]`
   const fieldEl = document.querySelector(selector) as HTMLElement
   
   if (fieldEl && formContainer.value) {
@@ -451,36 +469,23 @@ onUnmounted(() => {
               <div class="flex flex-col gap-2 pl-8 border-l-2 border-muted ml-2">
                 <Input v-model="step.description" class="mb-0 text-xs text-muted-foreground" placeholder="Step Description" />
 
-                <VueDraggable 
-                  v-model="step.fields" 
-                  :animation="150"
-                  handle=".drag-handle"
-                  class="space-y-2"
-                  group="fields"
-                >
-                  <div 
-                    v-for="(field, fIndex) in step.fields" 
-                    :key="field.id"
-                    class="flex items-center gap-2 p-2 rounded-md cursor-pointer hover:bg-muted transition-colors"
-                    :class="{ 'bg-muted': selectedFieldId === field.id }"
-                    @click="selectedFieldId = field.id"
-                  >
-                    <GripVertical class="w-4 h-4 text-muted-foreground drag-handle cursor-grab active:cursor-grabbing" />
-                    <span class="text-sm truncate flex-1">{{ field.label }}</span>
-                    <span class="text-xs text-muted-foreground uppercase">{{ field.type }}</span>
-                    <Button variant="ghost" size="icon" class="h-6 w-6" @click.stop="removeField(sIndex, fIndex)">
-                      <Trash2 class="w-3 h-3" />
-                    </Button>
-                  </div>
-                </VueDraggable>
+                <!-- Recursive Field List -->
+                <FormBuilderFieldList
+                  :fields="step.fields"
+                  :selected-field-id="selectedFieldId"
+                  @update:fields="step.fields = $event"
+                  @select="(id) => selectedFieldId = id"
+                  @remove="(fIndex) => removeField(sIndex, fIndex)"
+                />
                 
-                <div class="grid gap-2 @xs/form:grid-cols-2">
+                <div class="grid gap-2 @xs/form:grid-cols-2 mt-2">
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'input')"><Plus /> Input</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'select')"><Plus /> Select</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'checkbox')"><Plus /> Checkbox</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'radio')"><Plus /> Radio</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'switch')"><Plus /> Switch</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'textarea')"><Plus /> Textarea</Button>
+                  <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'array')"><Plus /> Array</Button>
                 </div>
               </div>
             </div>
@@ -557,7 +562,7 @@ onUnmounted(() => {
             <Input v-model="selectedField.key" />
           </div>
           
-          <div class="space-y-2">
+          <div class="space-y-2" v-if="selectedField.type !== 'array'">
             <Label>Placeholder</Label>
             <Input v-model="selectedField.placeholder" />
           </div>
@@ -574,7 +579,7 @@ onUnmounted(() => {
             <Switch v-model="selectedField.required" />
           </div>
           
-          <div class="space-y-2">
+          <div class="space-y-2" v-if="selectedField.type !== 'array'">
             <Label>Zod Rules</Label>
             <Input v-model="selectedField.zodRules" placeholder=".min(5).max(20)" />
             <p class="text-xs text-muted-foreground">Chain <a href="https://zod.dev/api" class="underline">Zod</a> rules starting with dot.</p>
