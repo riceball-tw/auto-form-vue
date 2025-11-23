@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends { steps: { title?: string; description?: string; fields: Record<string, FieldConfig> }[] }">
-import { computed, watch, ref } from 'vue'
+import { computed, watch, ref, shallowRef } from 'vue'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm, useFormValues } from 'vee-validate'
 import { z } from 'zod'
@@ -31,13 +31,15 @@ const allFieldsMap = computed(() => {
   return all
 })
 
-const zodSchema = computed(() => {
-  const shape: Record<string, z.ZodTypeAny> = {}
-  for (const [key, field] of Object.entries(allFieldsMap.value)) {
-    shape[key] = field.rules
-  }
-  return z.object(shape)
-})
+const zodSchema = shallowRef(
+  (() => {
+    const shape: Record<string, z.ZodTypeAny> = {}
+    for (const [key, field] of Object.entries(allFieldsMap.value)) {
+      shape[key] = field.rules
+    }
+    return z.object(shape)
+  })()
+)
 
 const typedSchema = computed(() => toTypedSchema(zodSchema.value))
 
@@ -115,7 +117,16 @@ const resetInvalidFieldValues = () => {
 }
 
 // Watch for field changes and reset invalid values
-watch(fields, resetInvalidFieldValues, { deep: true })
+// Watch for field changes and reset invalid values
+watch(fields, (newFields) => {
+  const shape: Record<string, z.ZodTypeAny> = {}
+  for (const field of newFields) {
+    shape[field.id] = field.rules
+  }
+  zodSchema.value = z.object(shape)
+
+  resetInvalidFieldValues()
+}, { deep: true, immediate: true })
 
 const onFormSubmit = handleSubmit((data) => {
   if (stepIndex.value === steps.value.length) {
