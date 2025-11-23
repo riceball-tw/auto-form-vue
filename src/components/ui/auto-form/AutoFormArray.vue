@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useFieldArray, useFormValues } from 'vee-validate'
-import type { FieldConfig, Dependency } from './types'
+import type { FieldConfig } from './types'
 import AutoField from './AutoField.vue'
 import AutoFormArray from './AutoFormArray.vue'
 import { Button } from '@/components/ui/button'
@@ -26,7 +26,7 @@ const getNestedValue = (obj: any, path: string) => {
   return path.split('.').reduce((acc, part) => {
     // Handle array indices like "items[0]"
     const arrayMatch = part.match(/(\w+)\[(\d+)\]/)
-    if (arrayMatch) {
+    if (arrayMatch && arrayMatch[1] && arrayMatch[2]) {
       return acc?.[arrayMatch[1]]?.[parseInt(arrayMatch[2])]
     }
     return acc?.[part]

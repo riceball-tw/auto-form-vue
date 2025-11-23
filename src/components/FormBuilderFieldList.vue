@@ -44,7 +44,7 @@ const addField = (parentField: BuilderField, type: FieldType) => {
 }
 
 const removeChildField = (parentField: BuilderField, index: number) => {
-  if (parentField.children) {
+  if (parentField.children && parentField.children[index]) {
     const field = parentField.children[index]
     if (props.selectedFieldId === field.id) {
       emit('select', '') // Deselect if removing selected
