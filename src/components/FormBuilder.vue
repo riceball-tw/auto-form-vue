@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, h, nextTick, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, h } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,6 +19,7 @@ import { faker } from '@faker-js/faker'
 
 import type { BuilderStep, BuilderField, FieldType, BuilderDependency } from './FormBuilderTypes'
 import FormBuilderFieldList from './FormBuilderFieldList.vue'
+import FormHighlighter from './FormHighlighter.vue'
 
 // Initial State
 const steps = ref<BuilderStep[]>([
@@ -394,53 +395,7 @@ const previewSchema = computed(() => {
   }
 })
 
-// Highlight logic for Live Preview
-const highlightStyle = ref<Record<string, string> | null>(null)
 const formContainer = ref<HTMLElement | null>(null)
-
-const updateHighlight = async () => {
-  await nextTick() // Wait for DOM update
-  
-  if (!selectedFieldId.value || !selectedField.value || activeTab.value !== 'preview' || !formContainer.value) {
-    highlightStyle.value = null
-    return
-  }
-  
-  // Use data-field-key selector with ends-with matcher to handle nested fields
-  const selector = `[data-field-key$="${selectedField.value.key}"]`
-  const fieldEl = document.querySelector(selector) as HTMLElement
-  
-  if (fieldEl && formContainer.value) {
-    const containerRect = formContainer.value.getBoundingClientRect()
-    const fieldRect = fieldEl.getBoundingClientRect()
-    
-    // Calculate relative position
-    const top = fieldRect.top - containerRect.top
-    const left = fieldRect.left - containerRect.left
-    
-    highlightStyle.value = {
-      top: `${top - 8}px`, // -8px padding
-      left: `${left - 8}px`,
-      width: `${fieldRect.width + 16}px`, // +16px total padding
-      height: `${fieldRect.height + 16}px`,
-    }
-  } else {
-    highlightStyle.value = null
-  }
-}
-
-watch([selectedFieldId, activeTab, previewSchema], () => {
-  updateHighlight()
-}, { flush: 'post', deep: true })
-
-// Update on resize
-onMounted(() => {
-  window.addEventListener('resize', updateHighlight)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', updateHighlight)
-})
 
 </script>
 
@@ -517,11 +472,11 @@ onUnmounted(() => {
         <div class="flex-1 flex flex-col w-full">
           <TabsContent value="preview" class="flex-1 p-8 overflow-auto">
             <div class="max-w-2xl mx-auto relative" ref="formContainer">
-              <div 
-                v-if="highlightStyle"
-                class="absolute bg-muted border border-muted-foreground border-dotted border-2 rounded-md -z-0 transition-all duration-300 ease-out pointer-events-none"
-                :style="highlightStyle"
-              ></div>
+              <FormHighlighter
+                v-if="activeTab === 'preview'"
+                :field-key="selectedField?.key ?? null"
+                :container-ref="formContainer"
+              />
               <div class="relative z-10">
               <AutoForm
                 :schema="previewSchema"
