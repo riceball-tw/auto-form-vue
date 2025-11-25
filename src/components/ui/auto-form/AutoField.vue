@@ -18,6 +18,7 @@ import { DateFormatter, type DateValue, getLocalTimeZone, fromDate } from '@inte
 import { CalendarIcon } from 'lucide-vue-next'
 import type { FieldConfig } from './types'
 import { RangeCalendar } from '@/components/ui/range-calendar'
+import Range from '@/components/ui/range/Range.vue'
 
 const props = defineProps<{
   config: FieldConfig
@@ -193,6 +194,16 @@ const description = computed(() => getFieldDescription(props.config.rules))
               initial-focus/>
           </PopoverContent>
         </Popover>
+      </div>
+ 
+      <div v-else-if="config.as === 'range'" :data-field-key="config.id">
+        <Range
+          :model-value="field.value"
+          :min="config.min"
+          :max="config.max"
+          :step="config.step"
+          :placeholder="config.placeholder"
+          @update:model-value="field.onChange"/>
       </div>
        
        <FieldDescription v-if="description">

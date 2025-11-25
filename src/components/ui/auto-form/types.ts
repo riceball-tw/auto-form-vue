@@ -87,6 +87,17 @@ export type FieldConfig =
     placeholder?: string;
     dependencies?: Dependency[];
   }
+  | {
+     label: string;
+     id: string;
+     as: 'range';
+     rules: z.ZodTypeAny;
+     min?: number;
+     max?: number;
+     step?: number;
+     placeholder?: string | [string, string];
+     dependencies?: Dependency[];
+  }
 
 // Utility type to infer form data from schema
 export type InferFormData = Record<string, any>
