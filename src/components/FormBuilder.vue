@@ -608,13 +608,21 @@ const formContainer = ref<HTMLElement | null>(null)
               <Button size="sm" variant="outline" @click="addOption(selectedField)">Add</Button>
             </div>
             <div class="space-y-2">
-              <div v-for="(opt, idx) in selectedField.options" :key="idx" class="flex gap-2">
-                <Input v-model="opt.label" placeholder="Label" class="flex-1" />
-                <Input v-model="opt.value" placeholder="Value" class="flex-1" />
-                <Button size="icon" variant="ghost" @click="removeOption(selectedField, idx)">
-                  <Trash2 class="w-4 h-4" />
-                </Button>
-              </div>
+              <VueDraggable
+                v-model="selectedField.options"
+                :animation="150"
+                handle="[data-option-handle]"
+                class="space-y-2"
+              >
+                <div v-for="(opt, idx) in selectedField.options" :key="idx" class="flex gap-2 items-center">
+                  <GripVertical data-option-handle class="w-4 h-4 text-muted-foreground cursor-grab active:cursor-grabbing" />
+                  <Input v-model="opt.label" placeholder="Label" class="flex-1" />
+                  <Input v-model="opt.value" placeholder="Value" class="flex-1" />
+                  <Button size="icon" variant="ghost" @click="removeOption(selectedField, idx)">
+                    <Trash2 class="w-4 h-4" />
+                  </Button>
+                </div>
+              </VueDraggable>
             </div>
           </div>
           
