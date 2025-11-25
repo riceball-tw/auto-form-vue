@@ -104,6 +104,8 @@ const onSelect = (id: string) => emit('select', id)
            <Button class="justify-start h-7 text-xs" variant="outline" size="sm" @click.stop="addField(field, 'radio')"><Plus class="w-3 h-3 mr-1" /> Radio</Button>
            <Button class="justify-start h-7 text-xs" variant="outline" size="sm" @click.stop="addField(field, 'switch')"><Plus class="w-3 h-3 mr-1" /> Switch</Button>
            <Button class="justify-start h-7 text-xs" variant="outline" size="sm" @click.stop="addField(field, 'textarea')"><Plus class="w-3 h-3 mr-1" /> Text</Button>
+           <Button class="justify-start h-7 text-xs" variant="outline" size="sm" @click.stop="addField(field, 'date')"><Plus class="w-3 h-3 mr-1" /> Date</Button>
+           <Button class="justify-start h-7 text-xs" variant="outline" size="sm" @click.stop="addField(field, 'range-date')"><Plus class="w-3 h-3 mr-1" /> Range Date</Button>
            <Button class="justify-start h-7 text-xs" variant="outline" size="sm" @click.stop="addField(field, 'array')"><Plus class="w-3 h-3 mr-1" /> Array</Button>
         </div>
       </div>
