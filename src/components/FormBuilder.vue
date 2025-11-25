@@ -165,6 +165,7 @@ const generateFieldCode = (field: BuilderField, indentLevel: number = 2): string
           r += `${'  '.repeat(level)}}))`
       }
       else if (f.type === 'date') r += `date()`
+      else if (f.type === 'range-date') r += `object({ start: z.date(), end: z.date() })`
       else r += `string()`
       
       if (f.zodRules) r += f.zodRules
@@ -290,6 +291,8 @@ const buildZodRule = (field: BuilderField) => {
         zodRule = z.array(z.object(shape))
     } else if (field.type === 'date') {
         zodRule = z.date()
+    } else if (field.type === 'range-date') {
+        zodRule = z.object({ start: z.date(), end: z.date() })
     } else {
     zodRule = z.string()
     }
@@ -312,6 +315,8 @@ const buildZodRule = (field: BuilderField) => {
              ruleString = `z.array(z.object({}))`
         } else if (field.type === 'date') {
             ruleString = `z.date()`
+        } else if (field.type === 'range-date') {
+             ruleString = `z.object({ start: z.date(), end: z.date() })`
         } else {
             ruleString = `z.string()`
         }
@@ -447,6 +452,7 @@ const formContainer = ref<HTMLElement | null>(null)
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'switch')"><Plus /> Switch</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'textarea')"><Plus /> Textarea</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'date')"><Plus /> Date</Button>
+                  <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'range-date')"><Plus /> Range Date</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'array')"><Plus /> Array</Button>
                 </div>
               </div>
