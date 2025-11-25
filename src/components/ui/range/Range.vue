@@ -48,7 +48,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: RangeTuple): void;
+  (e: "update:modelValue", value: RangeTuple | undefined): void;
 }>();
 
 const min = computed(() => props.min ?? 0);
@@ -111,9 +111,9 @@ function emitIfChanged(values: RangeTuple) {
   }
 }
 
-function handleSliderChange(values: number[]) {
-  if (values.length !== 2) return;
-  const tuple: RangeTuple = [values[0], values[1]];
+function handleSliderChange(values: number[] | undefined) {
+  if (!values || values.length !== 2) return;
+  const tuple: RangeTuple = [values[0]!, values[1]!];
   sliderValues.value = normalizeTuple(tuple);
   inputValues.value = [String(sliderValues.value[0]), String(sliderValues.value[1])];
   emitIfChanged(sliderValues.value);
