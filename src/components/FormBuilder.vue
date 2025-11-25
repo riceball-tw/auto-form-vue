@@ -488,7 +488,7 @@ const formContainer = ref<HTMLElement | null>(null)
                 :schema="previewSchema"
                 :on-submit="(data) => {
                   toast('Form submitted:', {
-                    description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(data, null, 2))),
+                    description: h('pre', { class: 'bg-card text-card-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(data, null, 2))),
                   })
                 }"
               />
