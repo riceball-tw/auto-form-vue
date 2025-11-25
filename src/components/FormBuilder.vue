@@ -84,7 +84,10 @@ const addField = (stepIndex: number, type: FieldType) => {
     options: type === 'select' || type === 'checkbox' || type === 'radio' ? [{ label: `${faker.animal.type()}`, value: 'option-1' }] : undefined,
     zodRules: '',
     dependencies: [],
-    children: type === 'array' ? [] : undefined
+    children: type === 'array' ? [] : undefined,
+    min: type === 'range' ? 0 : undefined,
+    max: type === 'range' ? 100 : undefined,
+    step: type === 'range' ? 1 : undefined
   }
   steps.value[stepIndex].fields.push(newField)
   selectedFieldId.value = newField.id
@@ -166,6 +169,15 @@ const generateFieldCode = (field: BuilderField, indentLevel: number = 2): string
       }
       else if (f.type === 'date') r += `date()`
       else if (f.type === 'range-date') r += `object({ start: z.date(), end: z.date() })`
+      else if (f.type === 'range') {
+        r += `tuple([z.number()`
+        if (f.min !== undefined) r += `.min(${f.min})`
+        if (f.max !== undefined) r += `.max(${f.max})`
+        r += `, z.number()`
+        if (f.min !== undefined) r += `.min(${f.min})`
+        if (f.max !== undefined) r += `.max(${f.max})`
+        r += `])`
+      }
       else r += `string()`
       
       if (f.zodRules) r += f.zodRules
@@ -200,6 +212,12 @@ const generateFieldCode = (field: BuilderField, indentLevel: number = 2): string
       code += `${indent}    { label: '${opt.label}', value: '${opt.value}' },\n`
     })
     code += `${indent}  ],\n`
+  }
+
+  if (field.type === 'range') {
+    if (field.min !== undefined) code += `${indent}  min: ${field.min},\n`
+    if (field.max !== undefined) code += `${indent}  max: ${field.max},\n`
+    if (field.step !== undefined) code += `${indent}  step: ${field.step},\n`
   }
 
   if (field.dependencies && field.dependencies.length > 0) {
@@ -293,6 +311,11 @@ const buildZodRule = (field: BuilderField) => {
         zodRule = z.date()
     } else if (field.type === 'range-date') {
         zodRule = z.object({ start: z.date(), end: z.date() })
+    } else if (field.type === 'range') {
+        let innerRule = z.number()
+        if (field.min !== undefined) innerRule = innerRule.min(field.min)
+        if (field.max !== undefined) innerRule = innerRule.max(field.max)
+        zodRule = z.tuple([innerRule, innerRule])
     } else {
     zodRule = z.string()
     }
@@ -317,6 +340,8 @@ const buildZodRule = (field: BuilderField) => {
             ruleString = `z.date()`
         } else if (field.type === 'range-date') {
              ruleString = `z.object({ start: z.date(), end: z.date() })`
+        } else if (field.type === 'range') {
+             ruleString = `z.tuple([z.number(), z.number()])`
         } else {
             ruleString = `z.string()`
         }
@@ -375,6 +400,12 @@ const buildFieldConfig = (field: BuilderField): any => {
             schema[child.key] = buildFieldConfig(child)
         })
         config.schema = schema
+    }
+
+    if (field.type === 'range') {
+        config.min = field.min
+        config.max = field.max
+        config.step = field.step
     }
 
     return config
@@ -453,6 +484,7 @@ const formContainer = ref<HTMLElement | null>(null)
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'textarea')"><Plus /> Textarea</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'date')"><Plus /> Date</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'range-date')"><Plus /> Range Date</Button>
+                  <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'range')"><Plus /> Range</Button>
                   <Button class=" justify-start" variant="outline" size="sm" @click="addField(sIndex, 'array')"><Plus /> Array</Button>
                 </div>
               </div>
@@ -551,6 +583,22 @@ const formContainer = ref<HTMLElement | null>(null)
             <Label>Zod Rules</Label>
             <Input v-model="selectedField.zodRules" placeholder=".min(5).max(20)" />
             <p class="text-xs text-muted-foreground">Chain <a href="https://zod.dev/api" class="underline">Zod</a> rules starting with dot.</p>
+          </div>
+          
+          <div v-if="selectedField.type === 'range'" class="space-y-4">
+            <Separator />
+            <div class="space-y-2">
+              <Label>Min Value</Label>
+              <Input v-model.number="selectedField.min" type="number" />
+            </div>
+            <div class="space-y-2">
+              <Label>Max Value</Label>
+              <Input v-model.number="selectedField.max" type="number" />
+            </div>
+            <div class="space-y-2">
+              <Label>Step</Label>
+              <Input v-model.number="selectedField.step" type="number" />
+            </div>
           </div>
           
           <div v-if="selectedField.options" class="space-y-4">

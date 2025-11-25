@@ -1,4 +1,4 @@
-export type FieldType = 'input' | 'textarea' | 'select' | 'checkbox' | 'switch' | 'radio' | 'array' | 'date' | 'range-date'
+export type FieldType = 'input' | 'textarea' | 'select' | 'checkbox' | 'switch' | 'radio' | 'array' | 'date' | 'range-date' | 'range'
 
 export interface FieldOption {
     label: string
@@ -26,6 +26,10 @@ export interface BuilderField {
     dependencies?: BuilderDependency[]
     // For Array type
     children?: BuilderField[]
+    // For Range type
+    min?: number
+    max?: number
+    step?: number
 }
 
 export interface BuilderStep {
