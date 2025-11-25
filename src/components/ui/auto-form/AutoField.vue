@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import { DateFormatter, type DateValue, getLocalTimeZone, fromDate } from '@internationalized/date'
 import { CalendarIcon } from 'lucide-vue-next'
 import type { FieldConfig } from './types'
+import { RangeCalendar } from '@/components/ui/range-calendar'
 
 const props = defineProps<{
   config: FieldConfig
@@ -149,6 +150,50 @@ const description = computed(() => getFieldDescription(props.config.rules))
           </Popover>
         </div>
 
+      <div v-else-if="config.as === 'range-date'" :data-field-key="config.id">
+        <Popover>
+          <PopoverTrigger as-child>
+            <Button
+              variant="outline"
+              :class="cn(
+                'w-full justify-start text-left font-normal',
+                !field.value && 'text-muted-foreground',
+              )">
+              <CalendarIcon class="mr-2 h-4 w-4" />
+              <template v-if="field.value?.start">
+                <template v-if="field.value.end">
+                  {{ new DateFormatter('en-us', { dateStyle: 'medium' }).format(new Date(field.value.start)) }} ~ {{ new DateFormatter('en-us', { dateStyle: 'medium' }).format(new Date(field.value.end)) }}
+                </template>
+                <template v-else>
+                  {{ new DateFormatter('en-us', { dateStyle: 'medium' }).format(new Date(field.value.start)) }}
+                </template>
+              </template>
+              <template v-else>
+                {{ config.placeholder || "Pick a date range" }}
+              </template>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent class="w-auto p-0">
+            <RangeCalendar
+              :number-of-months="2"
+              :model-value="field.value ? {
+                start: field.value.start ? fromDate(new Date(field.value.start), getLocalTimeZone()) : undefined,
+                end: field.value.end ? fromDate(new Date(field.value.end), getLocalTimeZone()) : undefined
+              } : undefined"
+              @update:model-value="(v: any) => {
+                if (v) {
+                  field.onChange({
+                    start: v.start ? v.start.toDate(getLocalTimeZone()) : undefined,
+                    end: v.end ? v.end.toDate(getLocalTimeZone()) : undefined
+                  })
+                } else {
+                  field.onChange(undefined)
+                }
+              }"
+              initial-focus/>
+          </PopoverContent>
+        </Popover>
+      </div>
        
        <FieldDescription v-if="description">
         {{ description }}

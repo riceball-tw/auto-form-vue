@@ -79,6 +79,14 @@ export type FieldConfig =
     schema: Record<string, FieldConfig>
     dependencies?: Dependency[]
   }
+  | {
+    label: string;
+    id: string;
+    as: 'range-date';
+    rules: z.ZodTypeAny;
+    placeholder?: string;
+    dependencies?: Dependency[];
+  }
 
 // Utility type to infer form data from schema
 export type InferFormData = Record<string, any>
