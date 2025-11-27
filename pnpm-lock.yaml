@@ -44,6 +44,9 @@ importers:
       vee-validate:
         specifier: ^4.15.1
         version: 4.15.1(vue@3.5.24(typescript@5.9.3))
+      view-transition-highlight:
+        specifier: ^0.0.2
+        version: 0.0.2
       vue:
         specifier: ^3.5.24
         version: 3.5.24(typescript@5.9.3)
@@ -1049,6 +1052,12 @@ packages:
     peerDependencies:
       vue: ^3.4.26
 
+  view-transition-highlight@0.0.1:
+    resolution: {integrity: sha512-hbbFXGzgiJQScvoTuIa6HAsm+7hn2VrHaF/JwXzclO7L5kZkAXOuB02D2kM5kVggmfjolYr9jItir4uAdF98qQ==}
+
+  view-transition-highlight@0.0.2:
+    resolution: {integrity: sha512-nAHPGyMxFGQcRq1fseOWu37XS++t958Lh+7Bf4zhKCXwIF0+gAgdkIbpuQivXa6jG/IDSDVbCH6EG5CgNue2JA==}
+
   vite@7.2.4:
     resolution: {integrity: sha512-NL8jTlbo0Tn4dUEXEsUg8KeyG/Lkmc4Fnzb8JXN/Ykm9G4HNImjtABMJgkQoVjOBN/j2WAwDTRytdqJbZsah7w==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -1997,6 +2006,12 @@ snapshots:
       '@vue/devtools-api': 7.7.9
       type-fest: 4.41.0
       vue: 3.5.24(typescript@5.9.3)
+
+  view-transition-highlight@0.0.1: {}
+
+  view-transition-highlight@0.0.2:
+    dependencies:
+      view-transition-highlight: 0.0.1
 
   vite@7.2.4(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2):
     dependencies:

@@ -1,66 +1,69 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useElementBounding, useMutationObserver } from '@vueuse/core'
+import { onMounted, onUnmounted, watch } from 'vue'
+import { Highlighter } from 'view-transition-highlight'
 
 const props = defineProps<{
   fieldKey: string | null
   containerRef: HTMLElement | null
 }>()
 
-const targetElement = ref<HTMLElement | null>(null)
+const highlighter = new Highlighter()
 
-// Find the target element based on the field key
-const findTarget = () => {
+const updateTarget = () => {
   if (!props.fieldKey || !props.containerRef) {
-    targetElement.value = null
     return
   }
-  // Use ends-with selector to match nested keys if necessary, or exact match
-  // The original logic used ends-with `[data-field-key$="${selectedField.value.key}"]`
-  // We'll stick to that for compatibility with nested fields
+
   const selector = `[data-field-key$="${props.fieldKey}"]`
-  targetElement.value = props.containerRef.querySelector(selector) as HTMLElement
+  const target = props.containerRef.querySelector(selector) as HTMLElement
+  
+  if (target) {
+    highlighter.setTarget(target)
+  }
 }
 
-// Watch for prop changes
-watch(() => [props.fieldKey, props.containerRef], findTarget, { immediate: true })
+watch(() => [props.fieldKey, props.containerRef], updateTarget, { flush: 'post' })
 
-// Watch for DOM changes in the container to re-find target (e.g. if field moved steps)
-useMutationObserver(
-  () => props.containerRef,
-  () => {
-    findTarget()
-  },
-  { childList: true, subtree: true }
-)
+// Also watch for DOM mutations in case the element appears later or moves
+let observer: MutationObserver | null = null
 
-// Get bounding boxes
-const targetRect = useElementBounding(targetElement)
-const containerRect = useElementBounding(() => props.containerRef)
-
-// Compute highlight style
-const highlightStyle = computed(() => {
-  if (!targetElement.value || !props.containerRef) return null
-
-  // If target is hidden or not in DOM (width/height 0), don't show
-  if (targetRect.width.value === 0 || targetRect.height.value === 0) return null
-
-  const top = targetRect.top.value - containerRect.top.value
-  const left = targetRect.left.value - containerRect.left.value
-
-  return {
-    top: `${top - 8}px`,
-    left: `${left - 8}px`,
-    width: `${targetRect.width.value + 16}px`,
-    height: `${targetRect.height.value + 16}px`,
+onMounted(() => {
+  if (props.containerRef) {
+    observer = new MutationObserver(updateTarget)
+    observer.observe(props.containerRef, { childList: true, subtree: true })
   }
+  updateTarget()
+})
+
+onUnmounted(() => {
+  observer?.disconnect()
 })
 </script>
 
-<template>
-  <div
-    v-if="highlightStyle"
-    class="absolute bg-muted border-muted-foreground border-dotted border-2 rounded-md transition-all duration-300 ease-out pointer-events-none"
-    :style="highlightStyle"
-  ></div>
-</template>
+<style>
+/* Global styles for the highlighter */
+.highlight {
+  position: absolute;
+  inset: -8px;
+  width: auto;
+  height: auto;
+  box-sizing: border-box;
+  background-color: rgba(0, 123, 255, 0.1);
+  border: 1px solid rgba(0, 123, 255, 0.6);
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 10;
+  view-transition-name: highlighter;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+::view-transition-group(highlighter) {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Ensure the target element is positioned so the highlight fills it correctly */
+[data-field-key] {
+  position: relative;
+}
+</style>
